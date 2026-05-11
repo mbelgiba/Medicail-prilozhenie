@@ -1,0 +1,263 @@
+/* ─── PREMIUM PROFILE PAGE ─── */
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.profile-page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-dark);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+/* ── Profile Header Card ── */
+.profile-header-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  background: var(--gradient-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(27,110,243,0.3);
+}
+
+.profile-name h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.profile-name p {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-iin-tag {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ── Form Styles ── */
+.profile-form-section {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Documents ── */
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.document-item:hover { background: var(--bg-main); }
+.document-item:last-child { border-bottom: none; }
+
+.doc-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.doc-icon {
+  width: 42px;
+  height: 42px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.doc-icon.pdf  { background: var(--accent-red-bg);    color: var(--accent-red); }
+.doc-icon.img  { background: var(--accent-green-bg);  color: var(--accent-green); }
+
+.doc-details h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 2px;
+}
+
+.doc-details p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-body);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn-export:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* ── Children ── */
+.children-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.child-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  transition: var(--transition);
+  background: var(--bg-card);
+}
+
+.child-card:hover { box-shadow: var(--shadow-md); }
+
+.child-card.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.child-info-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.child-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(27,110,243,0.25);
+}
+
+.child-details h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 2px;
+}
+
+.child-details p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.child-iin-valid   { color: var(--accent-green); font-size: 11px; font-weight: 600; }
+.child-iin-invalid { color: var(--accent-red);   font-size: 11px; font-weight: 600; }
+
+.btn-switch-profile {
+  background: transparent;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn-switch-profile:hover,
+.btn-switch-profile.current {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* ── Add child form ── */
+.add-child-form {
+  background: var(--bg-main);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-top: 8px;
+  animation: fadeInUp 0.3s ease both;
+}
+
+.add-child-form h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 16px;
+}
+
+/* ── IIN validation hint in profile ── */
+.iin-status {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: -6px;
+}
+
+.iin-status.valid {
+  background: var(--accent-green-bg);
+  color: var(--accent-green);
+  border-left: 3px solid var(--accent-green);
+}
+
+.iin-status.invalid {
+  background: var(--accent-red-bg);
+  color: var(--accent-red);
+  border-left: 3px solid var(--accent-red);
+}
+
+.iin-status.hint {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-left: 3px solid var(--primary);
+}

@@ -1,0 +1,33 @@
+/* ─── SECTION CARD ─── */
+.section-card-component {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(226,232,240,0.6);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.section-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.section-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.section-card-action {
+  display: flex;
+  align-items: center;
+}
+
+.section-card-body {
+  padding: 20px;
+}

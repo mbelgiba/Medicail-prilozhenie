@@ -1,0 +1,202 @@
+/* ─── PREMIUM APPOINTMENTS PAGE ─── */
+.appointments-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.page-title h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-dark);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  margin-bottom: 4px;
+}
+
+.page-title p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.app-layout-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+/* ── Doctor Selection ── */
+.doctor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.doctor-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition-bounce);
+  text-align: center;
+}
+
+.doctor-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.doctor-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+.doctor-avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+  background: var(--gradient-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(27,110,243,0.25);
+}
+
+.doctor-info h4 {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.doctor-info p {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.doctor-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ── Time Slots ── */
+.slots-container {
+  margin-top: 20px;
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.time-slot {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 10px 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-body);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.time-slot:hover {
+  background: white;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.time-slot.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.time-slot.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg-main);
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+/* ── Upcoming List ── */
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.upcoming-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.upcoming-item:hover {
+  border-color: rgba(27,110,243,0.3);
+  box-shadow: var(--shadow-xs);
+}
+
+.upcoming-date {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 10px;
+  border-radius: var(--radius);
+  text-align: center;
+  min-width: 60px;
+}
+
+.u-day { font-size: 18px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+.u-month { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+
+.upcoming-details { flex: 1; }
+.upcoming-details h4 { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+.upcoming-details p { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+
+.btn-cancel {
+  background: var(--accent-red-bg);
+  color: var(--accent-red);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius);
+  padding: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-cancel:hover { background: rgba(239,68,68,0.15); }
+
+@media (max-width: 1024px) {
+  .app-layout-grid { grid-template-columns: 1fr; }
+}

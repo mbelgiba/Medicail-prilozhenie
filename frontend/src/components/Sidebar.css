@@ -1,0 +1,210 @@
+/* ─── PREMIUM SIDEBAR ─── */
+.sidebar {
+  width: 268px;
+  min-width: 268px;
+  background: var(--gradient-sidebar);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative glow blobs */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  left: -60px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(27,110,243,0.35) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  bottom: 60px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Logo */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+  margin-bottom: 36px;
+  position: relative;
+  z-index: 1;
+}
+
+.logo-icon {
+  background: var(--gradient-primary);
+  color: white;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(27,110,243,0.4);
+  flex-shrink: 0;
+}
+
+.sidebar-logo span {
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+/* Nav */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(148,163,184,0.7);
+  padding: 12px 10px 6px;
+  margin-top: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--radius);
+  color: rgba(148,163,184,0.9);
+  font-weight: 500;
+  font-size: 14px;
+  transition: var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.95);
+  transform: translateX(2px);
+}
+
+.nav-item.active {
+  background: rgba(27,110,243,0.25);
+  color: white;
+  font-weight: 600;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--gradient-primary);
+  border-radius: 0 4px 4px 0;
+}
+
+.nav-item-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Footer */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-user-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.sidebar-user-mini:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.sidebar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(27,110,243,0.3);
+}
+
+.sidebar-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+}
+
+.sidebar-user-role {
+  font-size: 11px;
+  color: rgba(148,163,184,0.8);
+}
+
+.sidebar-logout-btn {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: rgba(252,165,165,0.9);
+  border-radius: var(--radius);
+  padding: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+
+.sidebar-logout-btn:hover {
+  background: rgba(239,68,68,0.2);
+  color: #FCA5A5;
+}

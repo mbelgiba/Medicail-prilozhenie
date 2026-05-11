@@ -1,0 +1,31 @@
+/* ─── LANGUAGE SWITCHER (for dark sidebar) ─── */
+.lang-switcher {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+.lang-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(148,163,184,0.9);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  letter-spacing: 0.04em;
+}
+
+.lang-btn:hover {
+  background: rgba(255,255,255,0.14);
+  color: white;
+}
+
+.lang-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(27,110,243,0.4);
+}

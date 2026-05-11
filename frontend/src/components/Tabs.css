@@ -1,0 +1,46 @@
+.tabs-container {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 2px solid var(--border-color);
+  gap: 32px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--text-dark);
+}
+
+.tab-btn.active {
+  color: var(--primary-blue);
+}
+
+/* Синяя линия под активной вкладкой */
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; /* Накладываем поверх серой границы */
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-blue);
+  border-radius: 2px 2px 0 0;
+}
+
+.tabs-content {
+  padding-top: 24px;
+}
