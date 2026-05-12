@@ -1,54 +1,110 @@
 package main
 
 import (
-	"log"
-	"os"
+    "net/http"
+    "sync"
 
-	"damukids-backend/config"
-	"damukids-backend/routes"
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+)
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+type User struct {
+    ID       int    `json:"id"`
+    Email    string `json:"email"`
+    Password string `json:"password"`
+    Name     string `json:"name"`
+}
+
+type Analysis struct {
+    ID     int    `json:"id"`
+    UserID int    `json:"user_id"`
+    Type   string `json:"type"`
+    Value  string `json:"value"`
+}
+
+var (
+    users     = []User{}
+    analyses  = []Analysis{}
+    userIDSeq = 1
+    analIDSeq = 1
+    mu        sync.Mutex
 )
 
 func main() {
-	// 1. Загрузка переменных окружения из .env
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("⚠️ Файл .env не найден, используются системные переменные")
-	}
+    r := gin.Default()
+    configCors := cors.DefaultConfig()
+    configCors.AllowAllOrigins = true
+    configCors.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+    r.Use(cors.New(configCors))
 
-	// 2. Подключение к MongoDB
-	config.ConnectDB()
+    r.GET("/", func(c *gin.Context) {
+        c.JSON(200, gin.H{"message": "API сервера DamuKids (in-memory) работает! 🚀"})
+    })
 
-	// 3. Создание сервера Gin
-	router := gin.Default()
+    r.POST("/auth/register", func(c *gin.Context) {
+        var req User
+        if err := c.ShouldBindJSON(&req); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные"})
+            return
+        }
+        mu.Lock()
+        req.ID = userIDSeq
+        userIDSeq++
+        users = append(users, req)
+        mu.Unlock()
+        c.JSON(200, gin.H{"message": "Пользователь зарегистрирован", "user": req, "token": "fake-token"})
+    })
 
-	// 4. Настройка CORS (чтобы React-фронтенд мог отправлять запросы)
-	configCors := cors.DefaultConfig()
-	configCors.AllowAllOrigins = true
-	configCors.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
-	router.Use(cors.New(configCors))
+    r.POST("/auth/login", func(c *gin.Context) {
+        var req User
+        if err := c.ShouldBindJSON(&req); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные"})
+            return
+        }
+        for _, u := range users {
+            if u.Email == req.Email && u.Password == req.Password {
+                c.JSON(200, gin.H{"message": "Успешный вход", "user": u, "token": "fake-token"})
+                return
+            }
+        }
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный email или пароль"})
+    })
 
-	// 5. Базовый тестовый маршрут
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "API сервера DamuKids на Golang работает! 🚀",
-		})
-	})
+    r.GET("/api/profile/:id", func(c *gin.Context) {
+        id := c.Param("id")
+        for _, u := range users {
+            if id == string(rune(u.ID+'0')) {
+                c.JSON(200, u)
+                return
+            }
+        }
+        c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+    })
 
-	// 6. Подключение маршрутов API
-	routes.SetupRouter(router)
+    r.POST("/api/analysis", func(c *gin.Context) {
+        var req Analysis
+        if err := c.ShouldBindJSON(&req); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные"})
+            return
+        }
+        mu.Lock()
+        req.ID = analIDSeq
+        analIDSeq++
+        analyses = append(analyses, req)
+        mu.Unlock()
+        c.JSON(200, gin.H{"message": "Анализ добавлен", "analysis": req})
+    })
 
-	// 7. Запуск сервера
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "5000"
-	}
+    r.GET("/api/analysis/:user_id", func(c *gin.Context) {
+        userID := c.Param("user_id")
+        result := []Analysis{}
+        for _, a := range analyses {
+            if userID == string(rune(a.UserID+'0')) {
+                result = append(result, a)
+            }
+        }
+        c.JSON(200, result)
+    })
 
-	log.Printf("🚀 Сервер запущен на порту: %s", port)
-	if err := router.Run(":" + port); err != nil {
-		log.Fatal("❌ Ошибка при запуске сервера: ", err)
-	}
+    r.Run(":5000")
 }
