@@ -231,7 +231,73 @@
   gap: 22px;
 }
 
+.parent-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.parent-check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.parent-check-item svg {
+  color: var(--accent-green);
+  flex-shrink: 0;
+}
+
+.emergency-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.emergency-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  background: var(--accent-red-bg);
+  color: var(--accent-red);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.emergency-contact span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.emergency-contact strong {
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.privacy-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 @media (max-width: 1100px) {
   .dashboard-grid-2 { grid-template-columns: 1fr; }
   .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
+  .emergency-grid { grid-template-columns: 1fr; }
 }

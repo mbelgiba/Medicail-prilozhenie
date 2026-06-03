@@ -1,7 +1,10 @@
-// Этот файл служит мостом между нашим React-фронтендом и твоим Node.js/Express бэкендом
+// Этот файл служит мостом между React-фронтендом и Go/Gin API.
 // Здесь собраны все функции для общения с сервером
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const rawApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = rawApiUrl.replace(/\/$/, '').endsWith('/api')
+  ? rawApiUrl.replace(/\/$/, '')
+  : `${rawApiUrl.replace(/\/$/, '')}/api`;
 
 // Базовая функция запроса с обработкой ошибок
 async function fetchWithAuth(endpoint, options = {}) {
@@ -36,6 +39,21 @@ export const api = {
   // Авторизация
   login: (credentials) => fetchWithAuth('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   register: (userData) => fetchWithAuth('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  getMe: () => fetchWithAuth('/profile/me'),
+
+  // Семья
+  getChildren: () => fetchWithAuth('/family/children'),
+  addChild: (data) => fetchWithAuth('/family/children', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Записи к врачу
+  getAppointments: () => fetchWithAuth('/appointments'),
+  addAppointment: (data) => fetchWithAuth('/appointments', { method: 'POST', body: JSON.stringify(data) }),
+  cancelAppointment: (id) => fetchWithAuth(`/appointments/${id}`, { method: 'DELETE' }),
+  getDoctorAppointments: () => fetchWithAuth('/doctor/appointments'),
+
+  // Поиск и уведомления
+  search: (query) => fetchWithAuth(`/search?q=${encodeURIComponent(query)}`),
+  getNotifications: () => fetchWithAuth('/notifications'),
   
   // Медицинские данные
   getMedicalRecords: () => fetchWithAuth('/medical'),
@@ -43,7 +61,10 @@ export const api = {
   
   // Игры
   getGames: () => fetchWithAuth('/games'),
+  getGameProgress: () => fetchWithAuth('/games/progress'),
   saveGameProgress: (data) => fetchWithAuth('/games/progress', { method: 'POST', body: JSON.stringify(data) }),
+  getRewardShop: () => fetchWithAuth('/rewards/shop'),
+  buyReward: (data) => fetchWithAuth('/rewards/buy', { method: 'POST', body: JSON.stringify(data) }),
 
   // ИИ Ассистент
   analyzeHealth: (patientId) => fetchWithAuth('/ai/analyze', { method: 'POST', body: JSON.stringify({ patientId }) }),

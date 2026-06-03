@@ -4,6 +4,12 @@ import api from '../utils/api';
 // Создаем контекст для авторизации
 export const AuthContext = createContext();
 
+const saveSession = (token, user, setCurrentUser) => {
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(user));
+  setCurrentUser(user);
+};
+
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,6 +21,18 @@ export const AuthProvider = ({ children }) => {
     
     if (token && savedUser) {
       setCurrentUser(JSON.parse(savedUser));
+      api.getMe()
+        .then((user) => {
+          localStorage.setItem('user', JSON.stringify(user));
+          setCurrentUser(user);
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setCurrentUser(null);
+        })
+        .finally(() => setLoading(false));
+      return;
     }
     setLoading(false);
   }, []);
@@ -23,9 +41,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await api.login(credentials);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setCurrentUser(response.user);
+      saveSession(response.token, response.user, setCurrentUser);
       return { success: true };
     } catch (error) {
       console.error('Ошибка входа:', error);
@@ -37,9 +53,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await api.register(userData);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setCurrentUser(response.user);
+      saveSession(response.token, response.user, setCurrentUser);
       return { success: true };
     } catch (error) {
       console.error('Ошибка регистрации:', error);

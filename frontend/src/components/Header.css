@@ -20,6 +20,7 @@
 .header-search {
   display: flex;
   align-items: center;
+  position: relative;
   background: var(--bg-main);
   border-radius: var(--radius);
   padding: 9px 16px;
@@ -45,6 +46,44 @@
 }
 
 .header-search input::placeholder { color: var(--text-light); }
+
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 20;
+}
+
+.search-suggestions button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-body);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.search-suggestions button span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.search-suggestions button:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
 
 /* Right side */
 .header-actions {
@@ -93,6 +132,46 @@
   justify-content: center;
   border: 2px solid white;
   animation: pulse-ring 2s ease infinite;
+}
+
+.notifications-panel {
+  position: absolute;
+  top: 58px;
+  right: 170px;
+  width: 320px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 8px;
+  z-index: 30;
+}
+
+.notification-item,
+.notification-empty {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+}
+
+.notification-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.notification-item:hover {
+  background: var(--bg-main);
+}
+
+.notification-item strong {
+  color: var(--text-dark);
+  font-size: 13px;
+}
+
+.notification-item span,
+.notification-empty {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 /* User profile mini */

@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FiHome, FiActivity, FiSmile, FiUser, FiCalendar, FiMapPin, FiLogOut } from 'react-icons/fi';
+import { FiHome, FiActivity, FiSmile, FiUser, FiCalendar, FiMapPin, FiLogOut, FiBriefcase, FiGift } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import './Sidebar.css';
@@ -14,14 +14,21 @@ function Sidebar() {
     navigate('/login');
   };
 
-  const navLinks = [
+  const parentLinks = [
     { to: '/',             icon: <FiHome />,     label: 'Главная' },
     { to: '/appointments', icon: <FiCalendar />, label: 'Запись к врачу' },
     { to: '/medical',      icon: <FiActivity />, label: 'Медицинская карта' },
     { to: '/map',          icon: <FiMapPin />,   label: 'Карта клиник (GPS)' },
     { to: '/games',        icon: <FiSmile />,    label: 'Игры и развитие' },
+    { to: '/child-zone',    icon: <FiGift />,     label: 'Детский режим' },
     { to: '/profile',      icon: <FiUser />,     label: 'Профиль' },
   ];
+  const doctorLinks = [
+    { to: '/',             icon: <FiHome />,      label: 'Главная' },
+    { to: '/doctor',       icon: <FiBriefcase />, label: 'Кабинет врача' },
+    { to: '/profile',      icon: <FiUser />,      label: 'Профиль' },
+  ];
+  const navLinks = currentUser?.role === 'doctor' ? doctorLinks : parentLinks;
 
   const userInitial = currentUser?.username?.charAt(0)?.toUpperCase() || 'А';
   const userName = currentUser?.username || 'Пользователь';

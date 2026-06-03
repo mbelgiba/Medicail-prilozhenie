@@ -1,19 +1,69 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import SectionCard from '../components/SectionCard';
-import { FiUser } from 'react-icons/fi';
+import { FiAlertTriangle, FiClock, FiPlus, FiUser } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
+import api from '../utils/api';
 import './Medical.css';
-
-const HISTORY = [
-  { id: 1, type: 'test', date: '10 Мая 2026', title: 'Общий анализ крови', desc: 'Уровень гемоглобина 110 г/л. Рекомендована коррекция диеты.', doctor: 'Лаборатория ИНВИВО' },
-  { id: 2, type: 'visit', date: '05 Мая 2026', title: 'Осмотр педиатра', desc: 'Жалобы на легкий кашель. Диагноз: ОРВИ легкой степени. Назначено обильное питье.', doctor: 'Смирнов А.В.' },
-  { id: 3, type: 'vaccine', date: '12 Апр 2026', title: 'Вакцинация', desc: 'Прививка КПК (корь, паротит, краснуха). Перенесена хорошо, без температуры.', doctor: 'Прививочный кабинет №3' },
-  { id: 4, type: 'visit', date: '01 Фев 2026', title: 'Плановый осмотр невролога', desc: 'Развитие по возрасту. Рекомендованы развивающие игры для мелкой моторики.', doctor: 'Ким Д.И.' },
-];
 
 function Medical() {
   const { currentUser } = useContext(AuthContext);
   const name = currentUser?.username || 'Пользователь';
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [recordForm, setRecordForm] = useState({
+    doctorName: '',
+    specialty: '',
+    diagnosis: '',
+    prescription: '',
+    status: 'completed',
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    api.getMedicalRecords()
+      .then((data) => {
+        if (mounted) setRecords(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        if (mounted) setError(err.message || 'Не удалось загрузить записи');
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const apiHistory = useMemo(() => records.map((record) => ({
+    id: `api-${record.id}`,
+    type: 'visit',
+    date: new Date(record.visitDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }),
+    title: record.diagnosis || record.specialty || 'Медицинская запись',
+    desc: record.prescription || 'Назначения не указаны',
+    doctor: `${record.doctorName || 'Врач'} · ${record.specialty || 'Специалист'}`,
+  })), [records]);
+
+  const history = apiHistory;
+
+  const handleAddRecord = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      const record = await api.addMedicalRecord(recordForm);
+      setRecords([record, ...records]);
+      setRecordForm({ doctorName: '', specialty: '', diagnosis: '', prescription: '', status: 'completed' });
+    } catch (err) {
+      setError(err.message || 'Не удалось добавить запись');
+    }
+  };
+
+  const reminders = [
+    { title: 'Витамин D', time: '09:00', details: '1 капля после завтрака' },
+    { title: 'Питьевой режим', time: 'В течение дня', details: 'Вода маленькими порциями' },
+    { title: 'Контроль температуры', time: '20:00', details: 'Записать показатель в заметки' },
+  ];
 
   return (
     <div className="medical-page">
@@ -29,19 +79,49 @@ function Medical() {
         {/* Left: Timeline */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <SectionCard title="История визитов и анализов">
-            <div className="timeline-container">
-              {HISTORY.map(item => (
-                <div key={item.id} className="timeline-item animate-fadeInUp">
-                  <div className={`timeline-dot ${item.type}`}></div>
-                  <div className="timeline-date">{item.date}</div>
-                  <div className="timeline-content">
-                    <h4>{item.title}</h4>
-                    <p>{item.desc}</p>
-                    <div className="t-doctor"><FiUser size={12}/> {item.doctor}</div>
+            {loading && <div className="medical-state">Загружаем данные медкарты...</div>}
+            {error && <div className="medical-warning"><FiAlertTriangle /> {error}</div>}
+            {!loading && history.length === 0 ? (
+              <div className="medical-state">Записей пока нет. Добавьте первый визит или анализ.</div>
+            ) : (
+              <div className="timeline-container">
+                {history.map(item => (
+                  <div key={item.id} className="timeline-item animate-fadeInUp">
+                    <div className={`timeline-dot ${item.type}`}></div>
+                    <div className="timeline-date">{item.date}</div>
+                    <div className="timeline-content">
+                      <h4>{item.title}</h4>
+                      <p>{item.desc}</p>
+                      <div className="t-doctor"><FiUser size={12}/> {item.doctor}</div>
+                    </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard title="Добавить запись">
+            <form className="medical-record-form" onSubmit={handleAddRecord}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Врач / клиника</label>
+                  <input className="form-input" value={recordForm.doctorName} onChange={(e) => setRecordForm({ ...recordForm, doctorName: e.target.value })} required />
                 </div>
-              ))}
-            </div>
+                <div className="form-group">
+                  <label>Специальность</label>
+                  <input className="form-input" value={recordForm.specialty} onChange={(e) => setRecordForm({ ...recordForm, specialty: e.target.value })} required />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Диагноз / событие</label>
+                <input className="form-input" value={recordForm.diagnosis} onChange={(e) => setRecordForm({ ...recordForm, diagnosis: e.target.value })} required />
+              </div>
+              <div className="form-group">
+                <label>Назначения / заметки</label>
+                <textarea className="form-input" rows={3} value={recordForm.prescription} onChange={(e) => setRecordForm({ ...recordForm, prescription: e.target.value })} required />
+              </div>
+              <button className="btn-primary" type="submit">Сохранить в медкарту</button>
+            </form>
           </SectionCard>
         </div>
 
@@ -82,6 +162,23 @@ function Medical() {
               <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '14px' }}>Медикаментозных аллергий нет</div>
               <p style={{ fontSize: '13px' }}>Пенициллин и антибиотики переносятся нормально.</p>
             </div>
+          </SectionCard>
+
+          <SectionCard title="Лекарства и напоминания">
+            <div className="reminder-list">
+              {reminders.map((item) => (
+                <div key={item.title} className="reminder-item">
+                  <div className="reminder-time"><FiClock /> {item.time}</div>
+                  <div>
+                    <h4>{item.title}</h4>
+                    <p>{item.details}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="btn-outline add-reminder-btn">
+              <FiPlus size={14} /> Добавить напоминание
+            </button>
           </SectionCard>
 
         </div>

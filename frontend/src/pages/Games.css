@@ -15,6 +15,17 @@
   color: var(--text-muted);
 }
 
+.game-save-status {
+  display: inline-flex;
+  margin-top: 10px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 /* Сетка меню игр */
 .games-menu-grid {
   display: grid;
@@ -35,8 +46,8 @@
 
 .game-card-menu:hover {
   transform: translateY(-8px);
-  border-color: var(--primary-blue);
-  box-shadow: 0 12px 24px rgba(0, 102, 204, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 12px 24px rgba(27, 110, 243, 0.15);
 }
 
 .game-icon-large {
@@ -95,7 +106,7 @@
 }
 
 .btn-back-game:hover {
-  color: var(--primary-blue);
+  color: var(--primary);
 }
 
 /* Игра 1: Животные */
@@ -121,7 +132,7 @@
 
 .animal-card:hover {
   background-color: #e6f0fa;
-  border-color: var(--primary-blue);
+  border-color: var(--primary);
   transform: scale(1.05);
 }
 
@@ -130,7 +141,7 @@
 }
 
 .btn-sound {
-  background-color: var(--primary-blue);
+  background-color: var(--primary);
   color: white;
   border: none;
   width: 40px;
@@ -185,4 +196,88 @@
   align-items: center;
   gap: 8px;
   box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+}
+
+.game-play-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.game-play-header h2 {
+  font-size: 24px;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.game-play-header p {
+  color: var(--text-muted);
+  max-width: 620px;
+}
+
+.puzzle-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+
+.puzzle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.puzzle-card {
+  min-height: 126px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-main);
+  color: var(--text-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.puzzle-card:hover {
+  border-color: var(--primary);
+  background: white;
+  transform: translateY(-2px);
+}
+
+.puzzle-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.puzzle-card.matched {
+  border-color: var(--accent-green);
+  background: var(--accent-green-bg);
+  color: var(--accent-green);
+  cursor: default;
+}
+
+.puzzle-icon {
+  font-size: 34px;
+}
+
+@media (max-width: 720px) {
+  .active-game-area { padding: 20px; }
+  .game-play-header { flex-direction: column; }
+  .gym-controls { flex-direction: column; }
 }

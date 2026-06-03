@@ -35,13 +35,21 @@ function ChangeView({ center, zoom }) {
 }
 
 const DEFAULT_POS = [51.169392, 71.449074]; // Astana center
+const DEFAULT_CLINICS = [
+  { id: 1, name: 'Детская поликлиника №1', type: 'Государственная', address: 'ул. Абая, 45', emoji: '🏥', lat: 51.174, lng: 71.454, phone: '+7 (7172) 55-00-01', rating: 4.5, open: '08:00-18:00' },
+  { id: 2, name: 'Реабилитационный центр «Нур»', type: 'Логопедия и ЗПР', address: 'пр. Достык, 12', emoji: '🏥', lat: 51.165, lng: 71.457, phone: '+7 (7172) 55-00-02', rating: 4.8, open: '09:00-19:00' },
+  { id: 3, name: 'Детская больница №3', type: 'Стационар', address: 'ул. Сейфуллина, 78', emoji: '🏥', lat: 51.177, lng: 71.446, phone: '+7 (7172) 55-00-03', rating: 4.3, open: '24/7' },
+  { id: 4, name: 'Аптека «Биосфера»', type: 'Аптека 24/7', address: 'ул. Сейфуллина, 102', emoji: '💊', lat: 51.171, lng: 71.443, phone: '+7 (7172) 55-00-04', rating: 4.6, open: '24/7' },
+  { id: 5, name: 'Центр развития «Кенгуру»', type: 'ЗРР / ЗПР', address: 'пр. Республики, 55', emoji: '🏥', lat: 51.162, lng: 71.445, phone: '+7 (7172) 55-00-05', rating: 4.9, open: '10:00-18:00' },
+];
 
 function Map() {
   const [position, setPosition]     = useState(DEFAULT_POS);
   const [hasLocation, setHasLocation] = useState(false);
   const [locError, setLocError]     = useState('');
-  const [clinics, setClinics]       = useState([]);
+  const [clinics, setClinics]       = useState(DEFAULT_CLINICS);
   const [activeClinic, setActiveClinic] = useState(null);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -54,11 +62,11 @@ function Map() {
         setPosition([lat, lng]);
         setHasLocation(true);
         setClinics([
-          { id: 1, name: 'Детская поликлиника №1',         type: 'Государственная', address: 'ул. Абая, 45',           emoji: '🏥', lat: lat + 0.005, lng: lng + 0.005, phone: '+7 (7172) 55-00-01', rating: 4.5 },
-          { id: 2, name: 'Реабилитационный центр «Нур»',   type: 'Логопедия и ЗПР', address: 'пр. Достык, 12',          emoji: '🏥', lat: lat - 0.004, lng: lng + 0.008, phone: '+7 (7172) 55-00-02', rating: 4.8 },
-          { id: 3, name: 'Детская больница №3',             type: 'Стационар',        address: 'ул. Сейфуллина, 78',    emoji: '🏥', lat: lat + 0.008, lng: lng - 0.003, phone: '+7 (7172) 55-00-03', rating: 4.3 },
-          { id: 4, name: 'Аптека «Биосфера»',               type: 'Аптека 24/7',      address: 'ул. Сейфуллина, 102',   emoji: '💊', lat: lat + 0.002, lng: lng - 0.006, phone: '+7 (7172) 55-00-04', rating: 4.6 },
-          { id: 5, name: 'Центр развития «Кенгуру»',        type: 'ЗРР / ЗПР',        address: 'пр. Республики, 55',    emoji: '🏥', lat: lat - 0.007, lng: lng - 0.004, phone: '+7 (7172) 55-00-05', rating: 4.9 },
+          { ...DEFAULT_CLINICS[0], lat: lat + 0.005, lng: lng + 0.005 },
+          { ...DEFAULT_CLINICS[1], lat: lat - 0.004, lng: lng + 0.008 },
+          { ...DEFAULT_CLINICS[2], lat: lat + 0.008, lng: lng - 0.003 },
+          { ...DEFAULT_CLINICS[3], lat: lat + 0.002, lng: lng - 0.006 },
+          { ...DEFAULT_CLINICS[4], lat: lat - 0.007, lng: lng - 0.004 },
         ]);
       },
       () => {
@@ -69,6 +77,13 @@ function Map() {
 
   const getIcon = (emoji) => emoji === '💊' ? pharmacyIcon : clinicIcon;
   const renderStars = (r) => '★'.repeat(Math.round(r)) + '☆'.repeat(5 - Math.round(r));
+  const visibleClinics = clinics.filter((clinic) => {
+    if (filter === 'all') return true;
+    if (filter === 'pharmacy') return clinic.emoji === '💊';
+    if (filter === 'speech') return clinic.type.toLowerCase().includes('зпр') || clinic.type.toLowerCase().includes('логоп');
+    if (filter === 'open') return clinic.open === '24/7';
+    return true;
+  });
 
   return (
     <div className="map-page-container animate-fadeInUp">
@@ -79,7 +94,7 @@ function Map() {
         </div>
         {hasLocation && (
           <span className="map-badge">
-            📍 Местоположение определено · {clinics.length} объектов рядом
+            📍 Местоположение определено · {visibleClinics.length} объектов рядом
           </span>
         )}
       </div>
@@ -89,6 +104,19 @@ function Map() {
           ⚠️ {locError}. Карта отображает центр Астаны по умолчанию.
         </div>
       )}
+
+      <div className="map-filter-row">
+        {[
+          { id: 'all', label: 'Все' },
+          { id: 'speech', label: 'Логопедия / ЗПР' },
+          { id: 'pharmacy', label: 'Аптеки' },
+          { id: 'open', label: '24/7' },
+        ].map((item) => (
+          <button key={item.id} className={`map-filter ${filter === item.id ? 'active' : ''}`} onClick={() => setFilter(item.id)}>
+            {item.label}
+          </button>
+        ))}
+      </div>
 
       <div className="map-layout">
         {/* Map */}
@@ -104,7 +132,7 @@ function Map() {
                 <Popup><strong>📍 Вы здесь</strong></Popup>
               </Marker>
             )}
-            {clinics.map((c) => (
+            {visibleClinics.map((c) => (
               <Marker
                 key={c.id}
                 position={[c.lat, c.lng]}
@@ -133,7 +161,7 @@ function Map() {
               <span>Определяем местоположение...</span>
             </div>
           )}
-          {clinics.map((c) => (
+          {visibleClinics.map((c) => (
             <div
               key={c.id}
               className={`clinic-card ${activeClinic?.id === c.id ? 'active' : ''}`}
@@ -144,6 +172,7 @@ function Map() {
                 <h4>{c.name}</h4>
                 <p className="clinic-type">{c.type}</p>
                 <p className="clinic-address">📍 {c.address}</p>
+                <p className="clinic-address">🕘 {c.open}</p>
                 <div className="clinic-rating">{renderStars(c.rating)} {c.rating}</div>
               </div>
             </div>
@@ -154,6 +183,7 @@ function Map() {
               <h3>{activeClinic.name}</h3>
               <p>{activeClinic.type}</p>
               <p>{activeClinic.address}</p>
+              <p>Режим: {activeClinic.open}</p>
               <p>{activeClinic.phone}</p>
               <button
                 className="btn-primary"

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { FiArrowLeft, FiVolume2, FiCheckCircle, FiPlay } from 'react-icons/fi';
+import React, { useMemo, useState } from 'react';
+import { FiArrowLeft, FiVolume2, FiCheckCircle, FiPlay, FiRefreshCw } from 'react-icons/fi';
+import api from '../utils/api';
 import './Games.css';
 
 function Games() {
@@ -8,6 +9,21 @@ function Games() {
   
   // Состояние для игры "Гимнастика"
   const [gymStep, setGymStep] = useState(0);
+  const [selectedPairs, setSelectedPairs] = useState([]);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [puzzleMessage, setPuzzleMessage] = useState('Найди пару: предмет и действие.');
+  const [saveStatus, setSaveStatus] = useState('');
+
+  const saveProgress = async (gameId, score, completed = true) => {
+    setSaveStatus('Сохраняем прогресс...');
+    try {
+      await api.saveGameProgress({ gameId, score, completed });
+      setSaveStatus('Прогресс сохранён');
+      setTimeout(() => setSaveStatus(''), 2500);
+    } catch (error) {
+      setSaveStatus(error.message || 'Не удалось сохранить прогресс');
+    }
+  };
 
   // ФУНКЦИЯ ОЗВУЧКИ (Использует встроенный в браузер синтезатор речи!)
   const playSound = (text) => {
@@ -40,6 +56,51 @@ function Games() {
     { title: 'Вкусное варенье', desc: 'Широким языком оближи верхнюю губу сверху вниз.', emoji: '😋' }
   ];
 
+  const puzzlePairs = [
+    { id: 'soap', left: 'Мыло', right: 'Моем руки', icon: '🧼' },
+    { id: 'brush', left: 'Щётка', right: 'Чистим зубы', icon: '🪥' },
+    { id: 'water', left: 'Вода', right: 'Пьём после прогулки', icon: '💧' },
+    { id: 'sleep', left: 'Подушка', right: 'Ложимся спать вовремя', icon: '🛏️' },
+  ];
+
+  const puzzleCards = useMemo(() => {
+    const left = puzzlePairs.map((item) => ({ ...item, side: 'left', text: item.left }));
+    const right = puzzlePairs.map((item) => ({ ...item, side: 'right', text: item.right }));
+    return [...left, ...right].sort((a, b) => `${a.side}-${a.id}`.localeCompare(`${b.side}-${b.id}`));
+  }, []);
+
+  const resetPuzzle = () => {
+    setSelectedPairs([]);
+    setMatchedPairs([]);
+    setPuzzleMessage('Найди пару: предмет и действие.');
+  };
+
+  const handlePuzzlePick = (card) => {
+    if (matchedPairs.includes(card.id) || selectedPairs.some((item) => item.side === card.side)) return;
+
+    const next = [...selectedPairs, card];
+    setSelectedPairs(next);
+    if (next.length < 2) return;
+
+    if (next[0].id === next[1].id) {
+      setMatchedPairs((prev) => [...prev, card.id]);
+      setPuzzleMessage('Верно! Отличная связка.');
+      playSound('Верно! Отличная связка.');
+    } else {
+      setPuzzleMessage('Почти. Попробуй другую пару.');
+      playSound('Попробуй другую пару.');
+    }
+
+    setTimeout(() => {
+      setSelectedPairs([]);
+      if (next[0].id === next[1].id && matchedPairs.length + 1 === puzzlePairs.length) {
+        setPuzzleMessage('Все пары собраны. Молодец!');
+        playSound('Все пары собраны. Молодец!');
+        saveProgress('puzzle', 100, true);
+      }
+    }, 800);
+  };
+
   // КОМПОНЕНТЫ ИГР
   const AnimalsGame = () => (
     <div className="active-game-area">
@@ -68,6 +129,7 @@ function Games() {
     const handleNext = () => {
       if (isLastStep) {
         playSound('Молодец! Тренировка окончена!');
+        saveProgress('gymnastics', 100, true);
         setActiveGame(null);
         setGymStep(0);
       } else {
@@ -107,6 +169,46 @@ function Games() {
     );
   };
 
+  const PuzzleGame = () => (
+    <div className="active-game-area">
+      <button className="btn-back-game" onClick={() => { setActiveGame(null); resetPuzzle(); }}>
+        <FiArrowLeft /> Назад к играм
+      </button>
+      <div className="game-play-header">
+        <div>
+          <h2>Полезные пары</h2>
+          <p>Соединяй привычку и предмет. Игра тренирует внимание и бытовые навыки.</p>
+        </div>
+        <button className="btn-outline" onClick={resetPuzzle}>
+          <FiRefreshCw size={14} /> Сначала
+        </button>
+      </div>
+
+      <div className="puzzle-status">
+        <strong>{matchedPairs.length}/{puzzlePairs.length}</strong>
+        <span>{puzzleMessage}</span>
+      </div>
+
+      <div className="puzzle-grid">
+        {puzzleCards.map((card) => {
+          const isMatched = matchedPairs.includes(card.id);
+          const isSelected = selectedPairs.some((item) => item.side === card.side && item.id === card.id);
+          return (
+            <button
+              key={`${card.side}-${card.id}`}
+              className={`puzzle-card ${isMatched ? 'matched' : ''} ${isSelected ? 'selected' : ''}`}
+              onClick={() => handlePuzzlePick(card)}
+              disabled={isMatched}
+            >
+              <span className="puzzle-icon">{card.icon}</span>
+              <span>{card.text}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   // ОСНОВНОЙ РЕНДЕР
   return (
     <div className="games-container">
@@ -115,12 +217,14 @@ function Games() {
         <div className="games-header">
           <h1>Игры и развитие (ЗРР / ЗПР)</h1>
           <p>Специализированные упражнения для стимуляции речи и нейроразвития</p>
+          {saveStatus && <span className="game-save-status">{saveStatus}</span>}
         </div>
       )}
 
       {/* РОУТИНГ ВНУТРИ КОМПОНЕНТА */}
       {activeGame === 'animals' && <AnimalsGame />}
       {activeGame === 'gymnastics' && <GymnasticsGame />}
+      {activeGame === 'puzzle' && <PuzzleGame />}
       
       {/* ГЛАВНОЕ МЕНЮ ИГР */}
       {!activeGame && (
@@ -140,11 +244,11 @@ function Games() {
             <span className="game-badge">Для детей 4-7 лет (Логопедия)</span>
           </div>
 
-          <div className="game-card-menu" style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+          <div className="game-card-menu" onClick={() => setActiveGame('puzzle')}>
             <div className="game-icon-large">🧩</div>
-            <h3>Нейро-пазлы (В разработке)</h3>
-            <p>Тренировка межполушарного взаимодействия и логики.</p>
-            <span className="game-badge" style={{ background: '#edf2f7', color: '#718096' }}>Скоро</span>
+            <h3>Полезные пары</h3>
+            <p>Соединяем предметы и действия: гигиена, сон, вода и ежедневные привычки.</p>
+            <span className="game-badge">Внимание и режим дня</span>
           </div>
 
         </div>

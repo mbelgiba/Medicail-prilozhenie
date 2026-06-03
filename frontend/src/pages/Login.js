@@ -51,6 +51,8 @@ const features = [
   { icon: '🤖', title: 'ИИ-ассистент',      desc: 'Анализ анализов и умные рекомендации' },
 ];
 
+const DEMO_LOGIN = { email: 'test@damukids.kz', password: '123456' };
+
 // ─── Component ───────────────────────────────────────────────────────────────
 function Login() {
   const [tab, setTab] = useState('login'); // 'login' | 'register'
@@ -79,6 +81,19 @@ function Login() {
       navigate('/');
     } else {
       setServerError(result.message || 'Неверный email или пароль');
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setServerError('');
+    setLoginForm(DEMO_LOGIN);
+    const result = await login(DEMO_LOGIN);
+    setLoading(false);
+    if (result.success) {
+      navigate('/');
+    } else {
+      setServerError(result.message || 'Не удалось войти в демо-режим');
     }
   };
 
@@ -201,6 +216,9 @@ function Login() {
 
               <button type="submit" className="btn-primary auth-submit-btn" disabled={loading}>
                 {loading ? <span className="spinner" /> : 'Войти в систему'}
+              </button>
+              <button type="button" className="btn-outline auth-submit-btn" onClick={handleDemoLogin} disabled={loading}>
+                Войти в демо
               </button>
             </form>
           )}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"damukids-backend/config"
@@ -31,6 +32,8 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Неверный формат данных", "error": err.Error()})
 		return
 	}
+	input.Email = strings.TrimSpace(strings.ToLower(input.Email))
+	input.Username = strings.TrimSpace(input.Username)
 
 	// ── Валидация ИИН РК ──────────────────────────────────────────────────────
 	if err := utils.ValidateIIN(input.IIN); err != nil {
@@ -106,6 +109,7 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Неверный формат данных"})
 		return
 	}
+	input.Email = strings.TrimSpace(strings.ToLower(input.Email))
 
 	collection := config.GetCollection("users")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

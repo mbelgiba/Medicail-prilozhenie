@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,8 +19,10 @@ func ConnectDB() {
 	mongoURI := os.Getenv("MONGO_URI")
 	dbName := os.Getenv("DB_NAME")
 
-	if mongoURI == "" {
+	if mongoURI == "" || strings.Contains(mongoURI, "<db_password>") {
 		mongoURI = "mongodb://localhost:27017"
+	}
+	if dbName == "" {
 		dbName = "damukids"
 	}
 

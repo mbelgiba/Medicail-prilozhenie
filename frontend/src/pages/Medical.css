@@ -136,3 +136,77 @@
   font-size: 12px;
   color: var(--text-muted);
 }
+
+.medical-state,
+.medical-warning {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.medical-state {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.medical-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
+  border: 1px solid rgba(245,158,11,0.22);
+}
+
+.reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reminder-item {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.reminder-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reminder-item h4 {
+  font-size: 13px;
+  color: var(--text-dark);
+  margin-bottom: 2px;
+}
+
+.reminder-item p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.add-reminder-btn {
+  margin-top: 14px;
+}
+
+.medical-record-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .reminder-item {
+    grid-template-columns: 1fr;
+  }
+}

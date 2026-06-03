@@ -14,7 +14,9 @@ type User struct {
 	Password string             `bson:"password" json:"-"`
 
 	// Роли: "parent" (родитель), "child" (ребенок), "doctor" (врач)
-	Role string `bson:"role" json:"role"`
+	Role       string `bson:"role" json:"role"`
+	DoctorCode string `bson:"doctor_code,omitempty" json:"doctorCode,omitempty"`
+	Specialty  string `bson:"specialty,omitempty" json:"specialty,omitempty"`
 
 	// Валидный ИИН Республики Казахстан
 	IIN string `bson:"iin" json:"iin"`

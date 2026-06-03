@@ -106,6 +106,13 @@
   margin-top: 20px;
 }
 
+.booking-details-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
 .slots-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -197,6 +204,28 @@
 }
 .btn-cancel:hover { background: rgba(239,68,68,0.15); }
 
+.visit-prep-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.visit-prep-list div {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-body);
+}
+
+.visit-prep-list svg {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 @media (max-width: 1024px) {
   .app-layout-grid { grid-template-columns: 1fr; }
+  .booking-details-grid { grid-template-columns: 1fr; }
 }

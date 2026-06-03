@@ -19,7 +19,7 @@ func GetMedicalRecords(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cursor, err := collection.Find(ctx, bson.M{})
+	cursor, err := collection.Find(ctx, bson.M{"user_id": c.GetString("userID")})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Ошибка получения данных"})
 		return
@@ -50,6 +50,7 @@ func AddMedicalRecord(c *gin.Context) {
 	}
 
 	record.ID = primitive.NewObjectID()
+	record.UserID = c.GetString("userID")
 	record.VisitDate = time.Now()
 
 	collection := config.GetCollection("medical_records")

@@ -1,7 +1,8 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import SectionCard from '../components/SectionCard';
-import { FiPlus, FiUser, FiUpload, FiDownload, FiFileText, FiImage } from 'react-icons/fi';
+import { FiCheckCircle, FiPlus, FiPhone, FiUpload, FiDownload, FiFileText, FiImage } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
+import api from '../utils/api';
 import './Profile.css';
 
 // ─── Kazakhstan IIN Validator (same algorithm as Login.js) ──────────────────
@@ -33,9 +34,9 @@ function Profile() {
   const fileInputRef = useRef(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const [children, setChildren] = useState([
-    { id: 1, name: 'Алиса Иванова', iin: '160515450123', birthDate: '15.05.2016', active: true }
-  ]);
+  const [children, setChildren] = useState([]);
+  const [childrenLoading, setChildrenLoading] = useState(true);
+  const [childrenError, setChildrenError] = useState('');
 
   const [documents, setDocuments] = useState([
     { id: 1, name: 'Общий_анализ_крови_Май.pdf', date: '10 Мая 2026', size: '1.2 MB', type: 'pdf' },
@@ -50,6 +51,29 @@ function Profile() {
   const [phone, setPhone] = useState(currentUser?.phone || '+7 (701) 123-45-67');
   const [email, setEmail] = useState(currentUser?.email || '');
   const [saveMsg, setSaveMsg] = useState('');
+  const parentTasks = [
+    'Паспорт/удостоверение родителя',
+    'ИИН ребёнка',
+    'Последние анализы или выписка',
+    'Список лекарств и аллергий',
+  ];
+
+  const loadChildren = async () => {
+    setChildrenLoading(true);
+    setChildrenError('');
+    try {
+      const data = await api.getChildren();
+      setChildren(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setChildrenError(error.message || 'Не удалось загрузить детей');
+    } finally {
+      setChildrenLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadChildren();
+  }, []);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -76,22 +100,25 @@ function Profile() {
     setChildIINState(clean.length === 12 ? validateIIN(clean) : null);
   };
 
-  const handleAddChild = (e) => {
+  const handleAddChild = async (e) => {
     e.preventDefault();
     if (!childIINState?.valid) {
       alert('Введите корректный ИИН РК для ребёнка');
       return;
     }
-    setChildren([...children, {
-      id: Date.now(),
-      name: childForm.name,
-      iin: childForm.iin,
-      birthDate: childForm.birthDate,
-      active: false,
-    }]);
-    setChildForm({ name: '', iin: '', birthDate: '' });
-    setChildIINState(null);
-    setShowAddForm(false);
+    try {
+      const child = await api.addChild(childForm);
+      setChildren([...children, child]);
+      setChildForm({ name: '', iin: '', birthDate: '' });
+      setChildIINState(null);
+      setShowAddForm(false);
+    } catch (error) {
+      setChildrenError(error.message || 'Не удалось прикрепить ребёнка');
+    }
+  };
+
+  const handleSwitchChild = (id) => {
+    setChildren(children.map((child) => ({ ...child, active: child.id === id })));
   };
 
   const handleSaveProfile = () => {
@@ -157,6 +184,24 @@ function Profile() {
         </div>
       </SectionCard>
 
+      <SectionCard title="Для спокойного визита">
+        <div className="parent-helper-grid">
+          <div className="helper-panel">
+            <h3>Контакты на случай срочной ситуации</h3>
+            <a href="tel:103"><FiPhone /> Скорая помощь: 103</a>
+            <a href="tel:112"><FiPhone /> Единый номер: 112</a>
+          </div>
+          <div className="helper-panel">
+            <h3>Что взять с собой</h3>
+            {parentTasks.map((task) => (
+              <div key={task} className="helper-check">
+                <FiCheckCircle /> {task}
+              </div>
+            ))}
+          </div>
+        </div>
+      </SectionCard>
+
       {/* ── Documents ── */}
       <SectionCard
         title="Медицинские документы (Анализы, Справки)"
@@ -210,6 +255,15 @@ function Profile() {
         }
       >
         <div className="children-list">
+          {childrenLoading && (
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Загружаем семейные профили...</p>
+          )}
+          {childrenError && (
+            <p style={{ fontSize: '13px', color: 'var(--accent-red)', fontWeight: 600 }}>{childrenError}</p>
+          )}
+          {!childrenLoading && children.length === 0 && (
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Пока нет прикреплённых детей. Добавьте ребёнка по ИИН.</p>
+          )}
           {children.map((child) => {
             const iinCheck = validateIIN(child.iin);
             return (
@@ -224,7 +278,10 @@ function Profile() {
                     </p>
                   </div>
                 </div>
-                <button className={`btn-switch-profile ${child.active ? 'current' : ''}`}>
+                <button
+                  className={`btn-switch-profile ${child.active ? 'current' : ''}`}
+                  onClick={() => handleSwitchChild(child.id)}
+                >
                   {child.active ? '✓ Текущий профиль' : 'Переключиться'}
                 </button>
               </div>
