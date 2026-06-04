@@ -5,7 +5,6 @@ import './App.css';
 import Sidebar      from './components/Sidebar';
 import Header       from './components/Header';
 import PrivateRoute from './components/PrivateRoute';
-import AiBot        from './components/AiBot';
 
 import Login        from './pages/Login';
 import Dashboard    from './pages/Dashboard';
@@ -15,7 +14,6 @@ import Profile      from './pages/Profile';
 import Appointments from './pages/Appointments';
 import Map          from './pages/Map';
 import DoctorDashboard from './pages/DoctorDashboard';
-import ChildZone from './pages/ChildZone';
 
 // Layout wrapper for authenticated pages (sidebar + header + content)
 function AppLayout({ children }) {
@@ -28,7 +26,6 @@ function AppLayout({ children }) {
           {children}
         </main>
       </div>
-      <AiBot />
     </div>
   );
 }
@@ -76,12 +73,6 @@ function App() {
             <AppLayout><DoctorDashboard /></AppLayout>
           </PrivateRoute>
         } />
-        <Route path="/child-zone" element={
-          <PrivateRoute>
-            <AppLayout><ChildZone /></AppLayout>
-          </PrivateRoute>
-        } />
-
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

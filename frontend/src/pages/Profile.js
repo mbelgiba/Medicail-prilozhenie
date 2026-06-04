@@ -1,367 +1,206 @@
-import React, { useEffect, useState, useRef, useContext } from 'react';
-import SectionCard from '../components/SectionCard';
-import { FiCheckCircle, FiPlus, FiPhone, FiUpload, FiDownload, FiFileText, FiImage } from 'react-icons/fi';
+import React, { useContext, useEffect, useState } from 'react';
+import { FiAlertTriangle, FiCheckCircle, FiCreditCard, FiPlus, FiUser } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import './Profile.css';
 
-// ─── Kazakhstan IIN Validator (same algorithm as Login.js) ──────────────────
+const FALLBACK_DEVELOPMENT_STATUSES = ['ЗРР', 'ЗПР', 'РАС', 'СДВГ', 'Норма развития', 'Наблюдение'];
+
 function validateIIN(iin) {
-  if (!/^\d{12}$/.test(iin)) return { valid: false, msg: 'ИИН должен содержать ровно 12 цифр' };
-  const cg = parseInt(iin[6]);
-  if (cg < 1 || cg > 6) return { valid: false, msg: 'Некорректный 7-й разряд ИИН (должен быть 1–6)' };
-  const mm = parseInt(iin.slice(2, 4));
-  const dd = parseInt(iin.slice(4, 6));
-  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return { valid: false, msg: 'Некорректная дата рождения в ИИН' };
+  if (!/^\d{12}$/.test(iin)) return { valid: false, msg: 'ИИН должен содержать 12 цифр' };
+  const cg = parseInt(iin[6], 10);
+  if (cg < 1 || cg > 6) return { valid: false, msg: 'Некорректный код века и пола' };
+  const mm = parseInt(iin.slice(2, 4), 10);
+  const dd = parseInt(iin.slice(4, 6), 10);
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return { valid: false, msg: 'Некорректная дата рождения' };
 
   const w1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  let sum = w1.reduce((acc, w, i) => acc + w * parseInt(iin[i]), 0);
+  let sum = w1.reduce((acc, w, i) => acc + w * parseInt(iin[i], 10), 0);
   let rem = sum % 11;
   if (rem === 10) {
     const w2 = [3, 4, 5, 6, 7, 8, 9, 10, 11, 1, 2];
-    sum = w2.reduce((acc, w, i) => acc + w * parseInt(iin[i]), 0);
+    sum = w2.reduce((acc, w, i) => acc + w * parseInt(iin[i], 10), 0);
     rem = sum % 11;
   }
-  if (rem !== parseInt(iin[11])) return { valid: false, msg: 'Контрольная цифра ИИН не совпадает' };
-
-  const gender = cg % 2 === 1 ? 'Мужской' : 'Женский';
-  const century = [1, 2].includes(cg) ? '1800-х' : [3, 4].includes(cg) ? '1900-х' : '2000-х';
-  return { valid: true, msg: `✓ ИИН корректен · Пол: ${gender} · Рождён в ${century}` };
+  if (rem !== parseInt(iin[11], 10)) return { valid: false, msg: 'Контрольная цифра не совпадает' };
+  return { valid: true, msg: 'ИИН прошёл проверку' };
 }
 
 function Profile() {
   const { currentUser } = useContext(AuthContext);
-  const fileInputRef = useRef(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-
   const [children, setChildren] = useState([]);
-  const [childrenLoading, setChildrenLoading] = useState(true);
-  const [childrenError, setChildrenError] = useState('');
-
-  const [documents, setDocuments] = useState([
-    { id: 1, name: 'Общий_анализ_крови_Май.pdf', date: '10 Мая 2026', size: '1.2 MB', type: 'pdf' },
-    { id: 2, name: 'Справка_в_бассейн.jpg',      date: '01 Апр 2026', size: '2.5 MB', type: 'img' },
-  ]);
-
-  // New child form state
-  const [childForm, setChildForm] = useState({ name: '', iin: '', birthDate: '' });
-  const [childIINState, setChildIINState] = useState(null);
-
-  // Form fields
-  const [phone, setPhone] = useState(currentUser?.phone || '+7 (701) 123-45-67');
-  const [email, setEmail] = useState(currentUser?.email || '');
-  const [saveMsg, setSaveMsg] = useState('');
-  const parentTasks = [
-    'Паспорт/удостоверение родителя',
-    'ИИН ребёнка',
-    'Последние анализы или выписка',
-    'Список лекарств и аллергий',
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    iin: '',
+    birthDate: '',
+    developmentStatus: 'Наблюдение',
+    primaryNeed: '',
+    notes: '',
+  });
+  const [iinState, setIinState] = useState(null);
+  const [catalog, setCatalog] = useState({ developmentStatuses: FALLBACK_DEVELOPMENT_STATUSES });
 
   const loadChildren = async () => {
-    setChildrenLoading(true);
-    setChildrenError('');
+    setLoading(true);
+    setError('');
     try {
       const data = await api.getChildren();
       setChildren(Array.isArray(data) ? data : []);
-    } catch (error) {
-      setChildrenError(error.message || 'Не удалось загрузить детей');
+    } catch (err) {
+      setError(err.message || 'Не удалось загрузить детей');
     } finally {
-      setChildrenLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     loadChildren();
+    api.getCatalog()
+      .then((data) => setCatalog({
+        developmentStatuses: Array.isArray(data?.developmentStatuses) ? data.developmentStatuses : FALLBACK_DEVELOPMENT_STATUSES,
+      }))
+      .catch(() => {});
   }, []);
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const ext = file.name.split('.').pop().toLowerCase();
-    const type = ['pdf'].includes(ext) ? 'pdf' : 'img';
-    const newDoc = {
-      id: Date.now(),
-      name: file.name,
-      date: new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }),
-      size: (file.size / 1024 / 1024).toFixed(1) + ' MB',
-      type,
-    };
-    setDocuments([newDoc, ...documents]);
+  const updateIIN = (value) => {
+    const clean = value.replace(/\D/g, '').slice(0, 12);
+    setForm((prev) => ({ ...prev, iin: clean }));
+    setIinState(clean.length === 12 ? validateIIN(clean) : null);
   };
 
-  const handleExport = (doc) => {
-    alert(`📥 Скачивание файла: ${doc.name}`);
-  };
-
-  const handleChildIINChange = (val) => {
-    const clean = val.replace(/\D/g, '').slice(0, 12);
-    setChildForm((f) => ({ ...f, iin: clean }));
-    setChildIINState(clean.length === 12 ? validateIIN(clean) : null);
-  };
-
-  const handleAddChild = async (e) => {
-    e.preventDefault();
-    if (!childIINState?.valid) {
-      alert('Введите корректный ИИН РК для ребёнка');
+  const addChild = async (event) => {
+    event.preventDefault();
+    if (!iinState?.valid) {
+      setError('Введите корректный ИИН ребёнка');
       return;
     }
     try {
-      const child = await api.addChild(childForm);
+      const child = await api.addChild(form);
       setChildren([...children, child]);
-      setChildForm({ name: '', iin: '', birthDate: '' });
-      setChildIINState(null);
-      setShowAddForm(false);
-    } catch (error) {
-      setChildrenError(error.message || 'Не удалось прикрепить ребёнка');
+      setForm({ name: '', iin: '', birthDate: '', developmentStatus: 'Наблюдение', primaryNeed: '', notes: '' });
+      setIinState(null);
+      setShowForm(false);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Не удалось прикрепить ребёнка');
     }
   };
 
-  const handleSwitchChild = (id) => {
-    setChildren(children.map((child) => ({ ...child, active: child.id === id })));
-  };
-
-  const handleSaveProfile = () => {
-    setSaveMsg('✓ Изменения сохранены');
-    setTimeout(() => setSaveMsg(''), 3000);
-  };
-
-  const initial = currentUser?.username?.charAt(0)?.toUpperCase() || 'А';
   const name = currentUser?.username || 'Пользователь';
-  const role = currentUser?.role === 'parent' ? 'Родитель / Представитель' :
-               currentUser?.role === 'doctor' ? 'Врач' : 'Пациент';
+  const role = currentUser?.role === 'doctor' ? 'Врач' : currentUser?.role === 'parent' ? 'Родитель / представитель' : 'Пациент';
+  const initial = name.charAt(0).toUpperCase();
 
   return (
     <div className="profile-page">
-      <h1 className="profile-page-title">Настройки профиля</h1>
-
-      {/* ── Parent Profile ── */}
-      <SectionCard>
-        <div className="profile-header-info">
-          <div className="profile-avatar">{initial}</div>
-          <div className="profile-name">
-            <h2>{name}</h2>
-            <p>
-              <span>{role}</span>
-              {currentUser?.iin && (
-                <span className="profile-iin-tag">ИИН: {currentUser.iin}</span>
-              )}
-            </p>
+      <section className="profile-overview">
+        <div className="profile-avatar">{initial}</div>
+        <div>
+          <span className="eyebrow">Профиль</span>
+          <h1>{name}</h1>
+          <p>{role}</p>
+          <div className="profile-tags">
+            <span>{currentUser?.email}</span>
+            {currentUser?.iin && <span>ИИН: {currentUser.iin}</span>}
           </div>
         </div>
+      </section>
 
-        <div className="profile-form-section">
-          <div className="form-row">
-            <div className="form-group">
-              <label>Телефон</label>
-              <input
-                type="tel"
-                className="form-input"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>Email</label>
-              <input
-                type="email"
-                className="form-input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <button className="btn-primary" onClick={handleSaveProfile}>
-              Сохранить изменения
-            </button>
-            {saveMsg && (
-              <span style={{ color: 'var(--accent-green)', fontSize: '13px', fontWeight: 600 }}>
-                {saveMsg}
-              </span>
-            )}
-          </div>
-        </div>
-      </SectionCard>
+      {error && <div className="profile-error"><FiAlertTriangle /> {error}</div>}
 
-      <SectionCard title="Для спокойного визита">
-        <div className="parent-helper-grid">
-          <div className="helper-panel">
-            <h3>Контакты на случай срочной ситуации</h3>
-            <a href="tel:103"><FiPhone /> Скорая помощь: 103</a>
-            <a href="tel:112"><FiPhone /> Единый номер: 112</a>
+      <section className="profile-card">
+        <div className="profile-card-title">
+          <div>
+            <h2>Семейные профили</h2>
+            <p>Прикрепите ребёнка по ИИН РК, чтобы вести медкарту и упражнения.</p>
           </div>
-          <div className="helper-panel">
-            <h3>Что взять с собой</h3>
-            {parentTasks.map((task) => (
-              <div key={task} className="helper-check">
-                <FiCheckCircle /> {task}
-              </div>
-            ))}
-          </div>
-        </div>
-      </SectionCard>
-
-      {/* ── Documents ── */}
-      <SectionCard
-        title="Медицинские документы (Анализы, Справки)"
-        noPadding
-        actionElement={
-          <>
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              onChange={handleFileUpload}
-              accept=".pdf,.jpg,.jpeg,.png"
-            />
-            <button
-              className="btn-outline"
-              onClick={() => fileInputRef.current.click()}
-            >
-              <FiUpload size={14} /> Загрузить
-            </button>
-          </>
-        }
-      >
-        {documents.map((doc) => (
-          <div className="document-item" key={doc.id}>
-            <div className="doc-info">
-              <div className={`doc-icon ${doc.type}`}>
-                {doc.type === 'pdf' ? <FiFileText /> : <FiImage />}
-              </div>
-              <div className="doc-details">
-                <h4>{doc.name}</h4>
-                <p>{doc.date} · {doc.size}</p>
-              </div>
-            </div>
-            <button className="btn-export" onClick={() => handleExport(doc)}>
-              <FiDownload size={13} /> Скачать
-            </button>
-          </div>
-        ))}
-      </SectionCard>
-
-      {/* ── Children ── */}
-      <SectionCard
-        title="Моя семья (Прикреплённые дети)"
-        actionElement={
-          <button
-            className="btn-outline"
-            onClick={() => setShowAddForm(!showAddForm)}
-          >
-            <FiPlus size={14} /> Добавить ребёнка
+          <button className="btn-outline" onClick={() => setShowForm((value) => !value)}>
+            <FiPlus /> Добавить ребёнка
           </button>
-        }
-      >
-        <div className="children-list">
-          {childrenLoading && (
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Загружаем семейные профили...</p>
-          )}
-          {childrenError && (
-            <p style={{ fontSize: '13px', color: 'var(--accent-red)', fontWeight: 600 }}>{childrenError}</p>
-          )}
-          {!childrenLoading && children.length === 0 && (
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Пока нет прикреплённых детей. Добавьте ребёнка по ИИН.</p>
-          )}
-          {children.map((child) => {
-            const iinCheck = validateIIN(child.iin);
-            return (
-              <div key={child.id} className={`child-card ${child.active ? 'active' : ''}`}>
-                <div className="child-info-main">
-                  <div className="child-avatar">{child.name.charAt(0)}</div>
-                  <div className="child-details">
-                    <h4>{child.name}</h4>
-                    <p>ИИН: {child.iin} · {child.birthDate}</p>
-                    <p className={iinCheck.valid ? 'child-iin-valid' : 'child-iin-invalid'}>
-                      {iinCheck.valid ? '✓ ИИН подтверждён' : '✗ Проверьте ИИН'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  className={`btn-switch-profile ${child.active ? 'current' : ''}`}
-                  onClick={() => handleSwitchChild(child.id)}
-                >
-                  {child.active ? '✓ Текущий профиль' : 'Переключиться'}
-                </button>
-              </div>
-            );
-          })}
         </div>
 
-        {showAddForm && (
-          <form className="add-child-form" onSubmit={handleAddChild}>
-            <h3>Прикрепление ребёнка по ИИН РК</h3>
+        {showForm && (
+          <form className="child-form" onSubmit={addChild}>
             <div className="form-row">
               <div className="form-group">
                 <label>ФИО ребёнка</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Иванова Алиса"
-                  value={childForm.name}
-                  onChange={(e) => setChildForm({ ...childForm, name: e.target.value })}
-                  required
-                />
+                <input className="form-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               </div>
               <div className="form-group">
-                <label>ИИН РК (12 цифр)</label>
-                <input
-                  type="text"
-                  className={`form-input ${childIINState ? (childIINState.valid ? '' : 'error') : ''}`}
-                  placeholder="000000000000"
-                  value={childForm.iin}
-                  onChange={(e) => handleChildIINChange(e.target.value)}
-                  maxLength={12}
-                  required
-                />
-                {childIINState && (
-                  <div className={`iin-status ${childIINState.valid ? 'valid' : 'invalid'}`}>
-                    {childIINState.msg}
-                  </div>
-                )}
-                {!childIINState && (
-                  <div className="iin-status hint">
-                    💡 Введите 12-значный ИИН — система проверит контрольный разряд автоматически
-                  </div>
-                )}
+                <label>Дата рождения</label>
+                <input type="date" className="form-input" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} required />
               </div>
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label>Дата рождения</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={childForm.birthDate}
-                  onChange={(e) => setChildForm({ ...childForm, birthDate: e.target.value })}
-                  required
-                />
+                <label>Категория наблюдения</label>
+                <select className="form-input" value={form.developmentStatus} onChange={(e) => setForm({ ...form, developmentStatus: e.target.value })}>
+                  {catalog.developmentStatuses.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
-                <label>Пол (из ИИН)</label>
+                <label>Основной запрос</label>
                 <input
-                  type="text"
                   className="form-input"
-                  readOnly
-                  value={
-                    childIINState?.valid
-                      ? (parseInt(childForm.iin[6]) % 2 === 1 ? 'Мужской' : 'Женский')
-                      : 'Определится из ИИН'
-                  }
-                  style={{ background: 'var(--bg-main)', color: 'var(--text-muted)' }}
+                  placeholder="Например: речь, внимание, поведение"
+                  value={form.primaryNeed}
+                  onChange={(e) => setForm({ ...form, primaryNeed: e.target.value })}
                 />
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-              <button type="submit" className="btn-primary">Прикрепить профиль</button>
-              <button type="button" className="btn-outline" onClick={() => { setShowAddForm(false); setChildIINState(null); }}>
-                Отмена
-              </button>
+            <div className="form-group">
+              <label>ИИН ребёнка</label>
+              <div className="iin-input-row">
+                <FiCreditCard />
+                <input className={`form-input ${iinState && !iinState.valid ? 'error' : ''}`} value={form.iin} onChange={(e) => updateIIN(e.target.value)} maxLength={12} required />
+              </div>
+              {iinState && <div className={`iin-message ${iinState.valid ? 'valid' : 'invalid'}`}>{iinState.msg}</div>}
+            </div>
+            <div className="form-group">
+              <label>Короткая заметка</label>
+              <textarea
+                className="form-input"
+                rows={3}
+                placeholder="Что важно знать специалисту перед первым приёмом"
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              />
+            </div>
+            <div className="form-actions">
+              <button className="btn-primary" type="submit">Прикрепить</button>
+              <button className="btn-ghost" type="button" onClick={() => setShowForm(false)}>Отмена</button>
             </div>
           </form>
         )}
-      </SectionCard>
+
+        {loading && <div className="profile-state">Загружаем семейные профили...</div>}
+        {!loading && children.length === 0 && (
+          <div className="profile-state">Пока нет прикреплённых детей.</div>
+        )}
+        <div className="children-grid">
+          {children.map((child) => {
+            const check = validateIIN(child.iin || '');
+            return (
+              <article className="child-profile-card" key={child.id}>
+                <div className="child-profile-icon"><FiUser /></div>
+                <div>
+                  <h3>{child.name}</h3>
+                  <p>{child.birthDate || 'Дата рождения не указана'}</p>
+                  {child.developmentStatus && <span className="child-badge">{child.developmentStatus}</span>}
+                  {child.primaryNeed && <p>{child.primaryNeed}</p>}
+                  <small className={check.valid ? 'valid' : 'invalid'}>
+                    <FiCheckCircle /> {check.valid ? 'ИИН подтверждён' : 'Проверьте ИИН'}
+                  </small>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }

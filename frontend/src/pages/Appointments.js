@@ -4,15 +4,10 @@ import { FiCalendar, FiClock, FiUser, FiX, FiCheck, FiClipboard, FiPhone } from 
 import api from '../utils/api';
 import './Appointments.css';
 
-const DOCTORS = [
-  { id: 1, name: 'Смирнов А.В.', spec: 'Педиатр', rating: 4.9, avatar: '👨‍⚕️' },
-  { id: 2, name: 'Иванова Е.С.', spec: 'Логопед-Дефектолог', rating: 4.8, avatar: '👩‍⚕️' },
-  { id: 3, name: 'Ким Д.И.',     spec: 'Детский невролог', rating: 4.7, avatar: '👨‍⚕️' },
-  { id: 4, name: 'Оспанова А.К.', spec: 'Психолог', rating: 5.0, avatar: '👩‍⚕️' },
-];
-
 const SLOTS = ['09:00', '09:30', '10:00', '11:30', '14:00', '14:30', '15:00', '16:30'];
 const REASONS = ['Плановый осмотр', 'Температура / ОРВИ', 'Справка', 'Повторный прием', 'Развитие речи', 'Консультация'];
+const VISIT_TYPES = ['Первичный приём', 'Повторный приём', 'Контроль динамики', 'Консультация по развитию'];
+const LOCATION_TYPES = ['Очно', 'Онлайн'];
 const monthNames = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 
 function formatDisplayDate(date) {
@@ -22,12 +17,19 @@ function formatDisplayDate(date) {
 
 function Appointments() {
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [selectedChildId, setSelectedChildId] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [reason, setReason] = useState(REASONS[0]);
+  const [visitType, setVisitType] = useState(VISIT_TYPES[0]);
+  const [locationType, setLocationType] = useState(LOCATION_TYPES[0]);
   const [note, setNote] = useState('');
+  const [children, setChildren] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [occupiedSlots, setOccupiedSlots] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -46,26 +48,43 @@ function Appointments() {
 
   useEffect(() => {
     loadAppointments();
+    api.getChildren()
+      .then((data) => {
+        const items = Array.isArray(data) ? data : [];
+        setChildren(items);
+        if (items.length > 0) setSelectedChildId(items.find((item) => item.active)?.id || items[0].id);
+      })
+      .catch((error) => setErrorMsg(error.message || 'Не удалось загрузить детей'));
+    api.getDoctors()
+      .then((data) => setDoctors(Array.isArray(data) ? data : []))
+      .catch((error) => setErrorMsg(error.message || 'Не удалось загрузить врачей'))
+      .finally(() => setDoctorsLoading(false));
   }, []);
 
-  const bookedSlots = useMemo(() => {
-    return appointments
-      .filter((app) => app.date === selectedDate)
-      .map((app) => app.time);
-  }, [appointments, selectedDate]);
+  useEffect(() => {
+    setOccupiedSlots([]);
+    setSelectedSlot('');
+    if (!selectedDoc?.id || !selectedDate) return;
+    api.getAppointmentAvailability(selectedDoc.id, selectedDate)
+      .then((data) => setOccupiedSlots(Array.isArray(data?.occupiedSlots) ? data.occupiedSlots : []))
+      .catch((error) => setErrorMsg(error.message || 'Не удалось проверить свободные слоты'));
+  }, [selectedDoc, selectedDate]);
+
+  const bookedSlots = useMemo(() => occupiedSlots, [occupiedSlots]);
 
   const handleBooking = async () => {
-    if (!selectedDoc || !selectedDate || !selectedSlot) {
-      alert('Пожалуйста, выберите врача, дату и время.');
+    if (!selectedChildId || !selectedDoc || !selectedDate || !selectedSlot) {
+      alert('Пожалуйста, выберите ребёнка, врача, дату и время.');
       return;
     }
 
     const newAppt = {
-      doctorId: String(selectedDoc.id),
-      docName: selectedDoc.name,
-      spec: selectedDoc.spec,
+      childId: selectedChildId,
+      doctorId: selectedDoc.id,
       date: selectedDate,
       time: selectedSlot,
+      visitType,
+      locationType,
       reason,
       note: note.trim(),
     };
@@ -79,6 +98,8 @@ function Appointments() {
       setSelectedDate('');
       setSelectedSlot('');
       setReason(REASONS[0]);
+      setVisitType(VISIT_TYPES[0]);
+      setLocationType(LOCATION_TYPES[0]);
       setNote('');
     } catch (error) {
       setErrorMsg(error.message || 'Не удалось создать запись');
@@ -109,26 +130,47 @@ function Appointments() {
         {/* ── Left column: Booking Form ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          <SectionCard title="1. Выберите специалиста">
+          <SectionCard title="1. Выберите ребёнка">
+            {children.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Сначала добавьте ребёнка в профиле.</p>
+            ) : (
+              <div className="form-group" style={{ maxWidth: '420px' }}>
+                <label>Ребёнок</label>
+                <select className="form-input" value={selectedChildId} onChange={(e) => setSelectedChildId(e.target.value)}>
+                  {children.map((child) => (
+                    <option key={child.id} value={child.id}>
+                      {child.name}{child.developmentStatus ? ` · ${child.developmentStatus}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard title="2. Выберите специалиста">
             <div className="doctor-grid">
-              {DOCTORS.map(doc => (
+              {doctorsLoading && <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Загружаем врачей...</p>}
+              {!doctorsLoading && doctors.length === 0 && (
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>В системе пока нет врачей. Администратор должен добавить аккаунты специалистов.</p>
+              )}
+              {doctors.map(doc => (
                 <div 
                   key={doc.id} 
                   className={`doctor-card ${selectedDoc?.id === doc.id ? 'selected' : ''}`}
                   onClick={() => setSelectedDoc(doc)}
                 >
-                  <div className="doctor-avatar">{doc.avatar}</div>
+                  <div className="doctor-avatar"><FiUser /></div>
                   <div className="doctor-info">
                     <h4>{doc.name}</h4>
-                    <p>{doc.spec}</p>
-                    <div className="doctor-rating">★ {doc.rating}</div>
+                    <p>{doc.specialty || 'Специалист'}</p>
+                    <div className="doctor-rating">Код врача: {doc.doctorCode || doc.id}</div>
                   </div>
                 </div>
               ))}
             </div>
           </SectionCard>
 
-          <SectionCard title="2. Выберите дату и время">
+          <SectionCard title="3. Выберите дату и время">
             <div className="form-group" style={{ maxWidth: '300px' }}>
               <label>Дата приема</label>
               <input 
@@ -145,6 +187,22 @@ function Appointments() {
                 <label>Причина визита</label>
                 <select className="form-input" value={reason} onChange={(e) => setReason(e.target.value)}>
                   {REASONS.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Тип приёма</label>
+                <select className="form-input" value={visitType} onChange={(e) => setVisitType(e.target.value)}>
+                  {VISIT_TYPES.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Формат</label>
+                <select className="form-input" value={locationType} onChange={(e) => setLocationType(e.target.value)}>
+                  {LOCATION_TYPES.map((item) => (
                     <option key={item} value={item}>{item}</option>
                   ))}
                 </select>
@@ -186,7 +244,7 @@ function Appointments() {
               <button 
                 className="btn-primary" 
                 onClick={handleBooking}
-                disabled={!selectedDoc || !selectedDate || !selectedSlot}
+                disabled={!selectedChildId || !selectedDoc || !selectedDate || !selectedSlot}
               >
                 Подтвердить запись
               </button>
@@ -222,9 +280,10 @@ function Appointments() {
                     </div>
                     <div className="upcoming-details">
                       <h4>{app.spec}</h4>
+                      {app.childName && <p><FiUser size={12}/> {app.childName}</p>}
                       <p><FiUser size={12}/> {app.docName}</p>
                       <p><FiClock size={12}/> {app.time}</p>
-                      <p><FiClipboard size={12}/> {app.reason}</p>
+                      <p><FiClipboard size={12}/> {app.reason} · {app.visitType || 'Приём'} · {app.locationType || 'Очно'}</p>
                     </div>
                     <button className="btn-cancel" onClick={() => cancelAppointment(app.id)} title="Отменить запись">
                       <FiX size={16}/>

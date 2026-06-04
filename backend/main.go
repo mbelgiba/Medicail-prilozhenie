@@ -26,7 +26,11 @@ func main() {
 
 	config.ConnectDB()
 	seedUser("test@damukids.kz", "Демо пользователь", "parent", "010101500003", "", "")
-	seedUser("doctor@damukids.kz", "Смирнов А.В.", "doctor", "010101500003", "1", "Педиатр")
+	seedUser("doctor@damukids.kz", "Смирнов А.В.", "doctor", "010101500003", "ped-001", "Педиатр")
+	seedUser("logoped@damukids.kz", "Иванова Е.С.", "doctor", "010101500011", "speech-001", "Логопед-дефектолог")
+	seedUser("neurolog@damukids.kz", "Ким Д.И.", "doctor", "010101500038", "neuro-001", "Детский невролог")
+	seedUser("psycholog@damukids.kz", "Оспанова А.К.", "doctor", "010101500046", "psy-001", "Детский психолог")
+	seedUser("admin@damukids.kz", "Администратор DamuKids", "admin", "010101500054", "", "")
 
 	router := gin.Default()
 	corsConfig := cors.DefaultConfig()
@@ -77,6 +81,7 @@ func seedUser(email, username, role, iin, doctorCode, specialty string) {
 		Email:      strings.ToLower(email),
 		Password:   string(hashed),
 		Role:       role,
+		Status:     models.UserStatusActive,
 		IIN:        iin,
 		Gender:     utils.IINGender(iin),
 		DoctorCode: doctorCode,

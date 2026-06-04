@@ -1,283 +1,347 @@
-.games-container {
+.games-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
 }
 
-.games-header h1 {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text-dark);
-  margin-bottom: 8px;
-}
-
-.games-header p {
-  color: var(--text-muted);
-}
-
-.game-save-status {
-  display: inline-flex;
-  margin-top: 10px;
-  background: var(--primary-light);
-  color: var(--primary);
-  border-radius: var(--radius-full);
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-/* Сетка меню игр */
-.games-menu-grid {
+.development-header {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
-}
-
-.game-card-menu {
-  background-color: #ffffff;
-  border-radius: 16px;
-  padding: 24px;
-  text-align: center;
-  border: 2px solid #edf2f7;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Пружинистая анимация */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-}
-
-.game-card-menu:hover {
-  transform: translateY(-8px);
-  border-color: var(--primary);
-  box-shadow: 0 12px 24px rgba(27, 110, 243, 0.15);
-}
-
-.game-icon-large {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.game-card-menu h3 {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 8px;
-}
-
-.game-card-menu p {
-  font-size: 14px;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-.game-badge {
-  display: inline-block;
-  background-color: #e6fffa;
-  color: #2c7a7b;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 16px;
-}
-
-/* ИНТЕРФЕЙС АКТИВНОЙ ИГРЫ */
-.active-game-area {
-  background-color: #ffffff;
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-  min-height: 500px;
-  display: flex;
-  flex-direction: column;
-}
-
-.btn-back-game {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 24px;
-  transition: color 0.2s;
-  align-self: flex-start;
-}
-
-.btn-back-game:hover {
-  color: var(--primary);
-}
-
-/* Игра 1: Животные */
-.animals-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
-  margin-top: 24px;
-}
-
-.animal-card {
-  background-color: #f8f9fa;
-  border: 2px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 24px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.animal-card:hover {
-  background-color: #e6f0fa;
-  border-color: var(--primary);
-  transform: scale(1.05);
-}
-
-.animal-emoji {
-  font-size: 70px;
-}
-
-.btn-sound {
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 18px;
-  box-shadow: 0 4px 10px rgba(0, 102, 204, 0.3);
-}
-
-/* Игра 2: Гимнастика */
-.gymnastics-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  flex: 1;
-  justify-content: center;
-}
-
-.gym-illustration {
-  font-size: 100px;
-  background-color: #fffaf0;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 24px;
-  border: 4px dashed #ed8936;
-}
-
-.gym-controls {
-  display: flex;
-  gap: 16px;
-  margin-top: 40px;
-}
-
-.btn-gym-next {
-  background-color: #38a169;
-  color: white;
-  border: none;
-  padding: 14px 32px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
-}
-
-.game-play-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.game-play-header h2 {
-  font-size: 24px;
-  color: var(--text-dark);
-  margin-bottom: 4px;
-}
-
-.game-play-header p {
-  color: var(--text-muted);
-  max-width: 620px;
-}
-
-.puzzle-status {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--primary-light);
-  color: var(--primary);
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 18px;
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-bottom: 18px;
-  font-size: 14px;
+  box-shadow: var(--shadow-sm);
 }
 
-.puzzle-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 14px;
-}
-
-.puzzle-card {
-  min-height: 126px;
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  background: var(--bg-main);
+.development-header h1,
+.exercise-heading h1 {
   color: var(--text-dark);
+  font-size: 30px;
+  line-height: 1.18;
+  margin-bottom: 10px;
+}
+
+.development-header p,
+.exercise-heading p,
+.section-title-row p {
+  max-width: 780px;
+  color: var(--text-muted);
+}
+
+.wallet-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   padding: 18px;
-  font-size: 15px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.wallet-card span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
   font-weight: 700;
+}
+
+.wallet-card strong {
+  color: var(--text-dark);
+  font-size: 28px;
+}
+
+.wallet-card p {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.game-status {
+  padding: 13px 16px;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: 1px solid rgba(27, 110, 243, 0.18);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+}
+
+.exercise-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.exercise-card {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
   cursor: pointer;
   transition: var(--transition);
 }
 
-.puzzle-card:hover {
+.exercise-card:hover {
   border-color: var(--primary);
-  background: white;
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.puzzle-card.selected {
+.exercise-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: var(--primary);
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  font-size: 22px;
+}
+
+.exercise-card strong {
+  color: var(--text-dark);
+  font-size: 18px;
+}
+
+.exercise-card p {
+  color: var(--text-muted);
+}
+
+.exercise-card small {
+  margin-top: auto;
+  color: var(--accent-green);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.rewards-section,
+.exercise-board {
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title-row,
+.exercise-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.section-title-row h2 {
+  color: var(--text-dark);
+  font-size: 21px;
+}
+
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.reward-card {
+  display: flex;
+  min-height: 150px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.reward-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--accent-orange);
+  font-weight: 700;
+}
+
+.reward-card strong {
+  color: var(--text-dark);
+  font-size: 16px;
+}
+
+.reward-card button {
+  margin-top: auto;
+}
+
+.back-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+  background: transparent;
+  border: none;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.exercise-heading strong {
+  color: var(--primary);
+  font-size: 24px;
+}
+
+.syllable-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.syllable-card,
+.pair-card {
+  position: relative;
+  min-height: 142px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.listen-syllable {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-dark);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.listen-syllable span {
+  font-size: 42px;
+  font-weight: 900;
+}
+
+.listen-syllable svg {
+  color: var(--primary);
+  font-size: 22px;
+}
+
+.syllable-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.syllable-card.done {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: var(--accent-green-bg);
+}
+
+.mark-done {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--accent-green);
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.cue-card {
+  padding: 22px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.cue-card span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.cue-card p {
+  margin-top: 8px;
+  color: var(--text-dark);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.exercise-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.pair-status {
+  margin-bottom: 14px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.pair-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pair-card {
+  color: var(--text-dark);
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pair-card.selected {
   border-color: var(--primary);
   background: var(--primary-light);
-  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-.puzzle-card.matched {
-  border-color: var(--accent-green);
-  background: var(--accent-green-bg);
+.pair-card.matched {
   color: var(--accent-green);
+  border-color: rgba(16, 185, 129, 0.4);
+  background: var(--accent-green-bg);
   cursor: default;
 }
 
-.puzzle-icon {
-  font-size: 34px;
+@media (max-width: 1100px) {
+  .development-header,
+  .exercise-grid,
+  .reward-grid,
+  .pair-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 720px) {
-  .active-game-area { padding: 20px; }
-  .game-play-header { flex-direction: column; }
-  .gym-controls { flex-direction: column; }
+  .development-header,
+  .exercise-grid,
+  .reward-grid,
+  .pair-grid,
+  .syllable-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-title-row,
+  .exercise-heading {
+    flex-direction: column;
+  }
 }

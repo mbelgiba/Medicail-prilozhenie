@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiCreditCard } from 'react-icons/fi';
+import { FiActivity, FiCalendar, FiCreditCard, FiEye, FiEyeOff, FiFileText, FiLock, FiMail, FiMapPin, FiUser } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import './Login.css';
 
@@ -45,13 +45,14 @@ function validateIIN(iin) {
 
 // ─── Features list ───────────────────────────────────────────────────────────
 const features = [
-  { icon: '🩺', title: 'Семейные медкарты', desc: 'Полная история здоровья каждого члена семьи' },
-  { icon: '🗺️', title: 'GPS-карта клиник',  desc: 'Ближайшие поликлиники и специалисты' },
-  { icon: '🎮', title: 'Игры для развития', desc: 'Логопедические упражнения с TTS-озвучкой' },
-  { icon: '🤖', title: 'ИИ-ассистент',      desc: 'Анализ анализов и умные рекомендации' },
+  { icon: <FiFileText />, title: 'Семейные медкарты', desc: 'Визиты, диагнозы и назначения в одном месте' },
+  { icon: <FiCalendar />, title: 'Запись к специалистам', desc: 'Педиатр, логопед, невролог и психолог' },
+  { icon: <FiActivity />, title: 'Упражнения развития', desc: 'Речь, внимание и бытовые навыки после консультации' },
+  { icon: <FiMapPin />, title: 'Карта учреждений', desc: 'Поликлиники, аптеки и центры развития рядом' },
 ];
 
 const DEMO_LOGIN = { email: 'test@damukids.kz', password: '123456' };
+const SPECIALTIES = ['Педиатр', 'Логопед-дефектолог', 'Детский невролог', 'Детский психолог', 'Реабилитолог'];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 function Login() {
@@ -64,7 +65,16 @@ function Login() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
 
   // Register form
-  const [regForm, setRegForm] = useState({ username: '', email: '', password: '', iin: '', role: 'parent' });
+  const [regForm, setRegForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    iin: '',
+    role: 'parent',
+    phone: '',
+    specialty: SPECIALTIES[0],
+    organization: '',
+  });
   const [iinState, setIinState] = useState(null); // null | { valid, msg }
 
   const { login, register } = useContext(AuthContext);
@@ -140,7 +150,7 @@ function Login() {
             Медицина ближе,<br />чем вы <span className="highlight">думаете</span>
           </h1>
           <p className="login-hero-desc">
-            Современная HealthTech-платформа для всей семьи. Управляйте здоровьем детей, записывайтесь к врачам и отслеживайте прогресс — всё в одном месте.
+            Простая семейная платформа для здоровья ребёнка: записи к специалистам, медкарта и домашние упражнения развития в одном месте.
           </p>
         </div>
 
@@ -290,10 +300,47 @@ function Login() {
                   onChange={(e) => setRegForm({ ...regForm, role: e.target.value })}
                 >
                   <option value="parent">Родитель / Представитель</option>
-                  <option value="patient">Пациент</option>
-                  <option value="doctor">Врач</option>
+                  <option value="doctor">Врач / Специалист</option>
                 </select>
               </div>
+
+              <div className="form-group">
+                <label>Телефон</label>
+                <input
+                  type="tel"
+                  className="form-input"
+                  placeholder="+7..."
+                  value={regForm.phone}
+                  onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
+                />
+              </div>
+
+              {regForm.role === 'doctor' && (
+                <>
+                  <div className="form-group">
+                    <label>Специализация</label>
+                    <select
+                      className="form-input"
+                      value={regForm.specialty}
+                      onChange={(e) => setRegForm({ ...regForm, specialty: e.target.value })}
+                    >
+                      {SPECIALTIES.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Организация / кабинет</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Например: Поликлиника №1, каб. 204"
+                      value={regForm.organization}
+                      onChange={(e) => setRegForm({ ...regForm, organization: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="form-group">
                 <label>Пароль</label>

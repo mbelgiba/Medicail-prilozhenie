@@ -21,11 +21,14 @@ import (
 // Register — регистрация нового пользователя с валидацией ИИН РК
 func Register(c *gin.Context) {
 	var input struct {
-		Username string `json:"username" binding:"required"`
-		Email    string `json:"email"    binding:"required,email"`
-		Password string `json:"password" binding:"required,min=6"`
-		IIN      string `json:"iin"      binding:"required"`
-		Role     string `json:"role"`
+		Username     string `json:"username" binding:"required"`
+		Email        string `json:"email"    binding:"required,email"`
+		Password     string `json:"password" binding:"required,min=6"`
+		IIN          string `json:"iin"      binding:"required"`
+		Role         string `json:"role"`
+		Phone        string `json:"phone"`
+		Specialty    string `json:"specialty"`
+		Organization string `json:"organization"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -44,9 +47,9 @@ func Register(c *gin.Context) {
 	}
 
 	// ── Проверка роли ─────────────────────────────────────────────────────────
-	role := input.Role
-	if role != "parent" && role != "patient" && role != "doctor" {
-		role = "patient"
+	role := strings.TrimSpace(input.Role)
+	if !models.AllowedPublicRoles[role] {
+		role = models.RoleParent
 	}
 
 	collection := config.GetCollection("users")
@@ -75,15 +78,20 @@ func Register(c *gin.Context) {
 	}
 
 	user := models.User{
-		ID:        primitive.NewObjectID(),
-		Username:  input.Username,
-		Email:     input.Email,
-		Password:  string(hashed),
-		Role:      role,
-		IIN:       input.IIN,
-		Gender:    utils.IINGender(input.IIN),
-		CreatedAt: time.Now(),
+		ID:           primitive.NewObjectID(),
+		Username:     input.Username,
+		Email:        input.Email,
+		Password:     string(hashed),
+		Role:         role,
+		Status:       models.UserStatusActive,
+		Phone:        strings.TrimSpace(input.Phone),
+		IIN:          input.IIN,
+		Specialty:    strings.TrimSpace(input.Specialty),
+		Organization: strings.TrimSpace(input.Organization),
+		Gender:       utils.IINGender(input.IIN),
+		CreatedAt:    time.Now(),
 	}
+	EnsureDoctorProfile(&user)
 
 	if _, err = collection.InsertOne(ctx, user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Ошибка при создании пользователя"})

@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FiHome, FiActivity, FiSmile, FiUser, FiCalendar, FiMapPin, FiLogOut, FiBriefcase, FiGift } from 'react-icons/fi';
+import { FiHome, FiActivity, FiSmile, FiUser, FiCalendar, FiMapPin, FiLogOut, FiBriefcase } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import './Sidebar.css';
@@ -19,8 +19,7 @@ function Sidebar() {
     { to: '/appointments', icon: <FiCalendar />, label: 'Запись к врачу' },
     { to: '/medical',      icon: <FiActivity />, label: 'Медицинская карта' },
     { to: '/map',          icon: <FiMapPin />,   label: 'Карта клиник (GPS)' },
-    { to: '/games',        icon: <FiSmile />,    label: 'Игры и развитие' },
-    { to: '/child-zone',    icon: <FiGift />,     label: 'Детский режим' },
+    { to: '/games',        icon: <FiSmile />,    label: 'Развитие ребёнка' },
     { to: '/profile',      icon: <FiUser />,     label: 'Профиль' },
   ];
   const doctorLinks = [

@@ -35,9 +35,12 @@ func GetChildren(c *gin.Context) {
 
 func AddChild(c *gin.Context) {
 	var input struct {
-		Name      string `json:"name" binding:"required"`
-		IIN       string `json:"iin" binding:"required"`
-		BirthDate string `json:"birthDate" binding:"required"`
+		Name              string `json:"name" binding:"required"`
+		IIN               string `json:"iin" binding:"required"`
+		BirthDate         string `json:"birthDate" binding:"required"`
+		DevelopmentStatus string `json:"developmentStatus"`
+		PrimaryNeed       string `json:"primaryNeed"`
+		Notes             string `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Заполните ФИО, ИИН и дату рождения"})
@@ -52,16 +55,25 @@ func AddChild(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	duplicate, _ := config.GetCollection("children").CountDocuments(ctx, bson.M{"parent_id": parentID, "iin": input.IIN})
+	if duplicate > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Этот ребёнок уже прикреплён к вашему профилю"})
+		return
+	}
+
 	count, _ := config.GetCollection("children").CountDocuments(ctx, bson.M{"parent_id": parentID})
 	child := models.Child{
-		ID:        primitive.NewObjectID(),
-		ParentID:  parentID,
-		Name:      input.Name,
-		IIN:       input.IIN,
-		BirthDate: input.BirthDate,
-		Gender:    utils.IINGender(input.IIN),
-		Active:    count == 0,
-		CreatedAt: time.Now(),
+		ID:                primitive.NewObjectID(),
+		ParentID:          parentID,
+		Name:              input.Name,
+		IIN:               input.IIN,
+		BirthDate:         input.BirthDate,
+		Gender:            utils.IINGender(input.IIN),
+		DevelopmentStatus: input.DevelopmentStatus,
+		PrimaryNeed:       input.PrimaryNeed,
+		Notes:             input.Notes,
+		Active:            count == 0,
+		CreatedAt:         time.Now(),
 	}
 
 	if _, err := config.GetCollection("children").InsertOne(ctx, child); err != nil {

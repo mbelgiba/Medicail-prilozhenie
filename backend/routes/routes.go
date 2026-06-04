@@ -25,6 +25,8 @@ func SetupRouter(router *gin.Engine) {
 			protected.GET("/profile/me", controllers.GetMe)
 			protected.GET("/search", controllers.Search)
 			protected.GET("/notifications", controllers.GetNotifications)
+			protected.GET("/doctors", controllers.GetDoctors)
+			protected.GET("/catalog", controllers.GetCatalog)
 
 			family := protected.Group("/family")
 			{
@@ -36,6 +38,7 @@ func SetupRouter(router *gin.Engine) {
 			{
 				appointments.GET("", controllers.GetAppointments)
 				appointments.GET("/", controllers.GetAppointments)
+				appointments.GET("/availability", controllers.GetAppointmentAvailability)
 				appointments.POST("", controllers.AddAppointment)
 				appointments.POST("/", controllers.AddAppointment)
 				appointments.DELETE("/:id", controllers.CancelAppointment)
@@ -48,12 +51,6 @@ func SetupRouter(router *gin.Engine) {
 				medical.GET("/", controllers.GetMedicalRecords)
 				medical.POST("", controllers.AddMedicalRecord)
 				medical.POST("/", controllers.AddMedicalRecord)
-			}
-
-			// AI analysis
-			ai := protected.Group("/ai")
-			{
-				ai.POST("/analyze", controllers.AnalyzeHealth)
 			}
 
 			games := protected.Group("/games")
@@ -69,11 +66,6 @@ func SetupRouter(router *gin.Engine) {
 				doctor.GET("/appointments", controllers.GetDoctorAppointments)
 			}
 
-			rewards := protected.Group("/rewards")
-			{
-				rewards.GET("/shop", controllers.GetRewardShop)
-				rewards.POST("/buy", controllers.BuyReward)
-			}
 		}
 	}
 }
