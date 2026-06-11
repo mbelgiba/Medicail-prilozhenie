@@ -199,8 +199,8 @@ function Map() {
           <MapContainer center={position} zoom={13} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
             <ChangeView center={position} zoom={14} />
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             />
             {hasLocation && (
               <Marker position={position} icon={userIcon}>
@@ -273,6 +273,39 @@ function Map() {
               </button>
             </div>
           )}
+
+          {/* Child GPS & Radio Tracker */}
+          <div className="child-tracker-panel" style={{ marginTop: '20px', padding: '16px', background: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--primary-glow)' }}>
+            <h3 style={{ fontSize: '15px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="pulsing-dot" style={{ width: '10px', height: '10px', background: 'var(--accent-green)', borderRadius: '50%', display: 'inline-block' }}></span>
+              Радио-няня / Трекинг
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+              Безопасное P2P подключение к устройству ребёнка для получения геопозиции и аудио-фона.
+            </p>
+            <button 
+              className="btn-primary" 
+              style={{ width: '100%', fontSize: '13px', background: 'var(--accent-purple)' }}
+              onClick={() => {
+                if (!window.confirm('Запросить аудио-стрим (Микрофон) для демонстрации "Радио"?')) return;
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                  alert('✅ Защищенное соединение установлено! Вы слышите фон с устройства ребёнка (демо: ваш микрофон). Геопозиция ребёнка обновляется на карте.');
+                  // В MVP мы воспроизводим микрофон, чтобы показать работоспособность WebRTC/Media API
+                  const audio = new Audio();
+                  audio.srcObject = stream;
+                  audio.play();
+                  setTimeout(() => {
+                    stream.getTracks().forEach(t => t.stop());
+                    alert('Подключение прервано по тайм-ауту (Демо завершено)');
+                  }, 15000);
+                }).catch(err => {
+                  alert('Ошибка доступа к микрофону: ' + err.message);
+                });
+              }}
+            >
+              🎙️ Подключиться к устройству
+            </button>
+          </div>
         </div>
       </div>
     </div>

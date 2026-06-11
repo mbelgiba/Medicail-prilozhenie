@@ -61,15 +61,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const [childMode, setChildMode] = useState(() => {
+    return localStorage.getItem('childMode') === 'true';
+  });
+
+  const toggleChildMode = (value) => {
+    setChildMode(value);
+    localStorage.setItem('childMode', value);
+  };
+
   // Функция выхода
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('childMode');
     setCurrentUser(null);
+    setChildMode(false);
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ currentUser, loading, login, register, logout, childMode, toggleChildMode }}>
       {!loading && children}
     </AuthContext.Provider>
   );

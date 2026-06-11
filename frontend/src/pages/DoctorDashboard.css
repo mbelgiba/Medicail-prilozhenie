@@ -6,76 +6,187 @@
 
 .doctor-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
 }
 
 .doctor-stat {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 18px;
-  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
 }
 
-.doctor-stat svg { color: var(--primary); }
 .doctor-stat span {
   display: block;
-  margin-top: 10px;
   font-size: 28px;
   font-weight: 800;
   color: var(--text-dark);
+  line-height: 1.1;
 }
-.doctor-stat p { color: var(--text-muted); font-size: 13px; }
+
+.doctor-stat p { 
+  color: var(--text-muted); 
+  font-size: 13px; 
+  margin-top: 4px;
+}
+
+.doctor-content {
+  margin-top: 10px;
+}
 
 .doctor-appointment-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .doctor-appointment {
-  display: grid;
-  grid-template-columns: 120px 1fr auto;
-  gap: 14px;
-  align-items: center;
-  padding: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  background: var(--bg-main);
+  background: var(--bg-card);
+}
+
+.doctor-appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
 }
 
 .doctor-appointment-date strong {
   display: block;
   color: var(--text-dark);
+  font-size: 16px;
 }
 
-.doctor-appointment-date span,
-.doctor-appointment-body p,
-.doctor-state {
+.doctor-appointment-date span {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .doctor-appointment-body h3 {
   color: var(--text-dark);
-  font-size: 15px;
-  margin-bottom: 5px;
+  font-size: 16px;
+  margin-bottom: 8px;
 }
 
 .doctor-appointment-body p {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  color: var(--text-body);
+  font-size: 14px;
+  margin-bottom: 6px;
 }
 
-.doctor-status {
+.appt-note {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border-left: 3px solid var(--accent-orange);
+  border-radius: var(--radius-sm);
+  color: var(--text-body);
+}
+
+.doctor-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+
+.btn-icon.primary {
   background: var(--primary-light);
   color: var(--primary);
-  border-radius: var(--radius-full);
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 800;
+}
+
+.btn-icon.primary:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-icon.danger {
+  background: var(--accent-red-bg);
+  color: var(--accent-red);
+}
+
+.btn-icon.danger:hover {
+  background: var(--accent-red);
+  color: #fff;
+}
+
+.doctor-record-form {
+  background: var(--bg-main);
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doctor-record-form h4 {
+  margin-bottom: 4px;
+  color: var(--text-dark);
+}
+
+.doctor-record-form input,
+.doctor-record-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-solid);
+  color: var(--text-dark);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.doctor-record-form input:focus,
+.doctor-record-form textarea:focus {
+  border-color: var(--primary);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-outline {
+  padding: 10px 20px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-body);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-outline:hover {
+  background: var(--bg-card-solid);
+}
+
+.slide-down {
+  animation: fadeInUp 0.3s ease-out;
 }
 
 .doctor-error {
@@ -84,5 +195,8 @@
 }
 
 @media (max-width: 720px) {
-  .doctor-appointment { grid-template-columns: 1fr; }
+  .doctor-appointment-header {
+    flex-direction: column;
+    gap: 10px;
+  }
 }

@@ -243,6 +243,62 @@ function Games() {
     );
   }
 
+  if (active === 'emotions') {
+    const emotions = [
+      { emoji: '😄', answer: 'Радость' },
+      { emoji: '😢', answer: 'Грусть' },
+      { emoji: '😠', answer: 'Злость' },
+      { emoji: '😲', answer: 'Удивление' },
+    ];
+    const options = ['Радость', 'Грусть', 'Злость', 'Удивление', 'Страх', 'Спокойствие'];
+    const currentEmotion = emotions[artStep % emotions.length];
+
+    const checkEmotion = (ans) => {
+      if (ans === currentEmotion.answer) {
+        speak('Правильно!');
+        if (artStep + 1 === emotions.length) {
+          saveProgress('emotions', 100);
+          setActive(null);
+          setArtStep(0);
+        } else {
+          setArtStep(step => step + 1);
+        }
+      } else {
+        speak('Подумай еще раз. Посмотри на лицо.');
+      }
+    };
+
+    return (
+      <div className="games-page">
+        <button className="back-link" onClick={() => { setActive(null); setArtStep(0); }}><FiArrowLeft /> К упражнениям</button>
+        <section className="exercise-board">
+          <div className="exercise-heading">
+            <div>
+              <h1>Угадай эмоцию</h1>
+              <p>Посмотри на лицо и выбери правильную эмоцию.</p>
+            </div>
+            <strong>{artStep}/{emotions.length}</strong>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '40px 0' }}>
+            <div style={{ fontSize: '100px', filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.1))', animation: 'bounceIn 0.5s' }}>
+              {currentEmotion.emoji}
+            </div>
+            <div className="pair-grid" style={{ width: '100%', maxWidth: '400px' }}>
+              {options.sort(() => Math.random() - 0.5).slice(0, 4).map((opt, idx) => (
+                // Force include the correct answer if it's missing (simple hack: just map over emotions directly for MVP if needed, but let's just render standard options)
+                <button key={idx} className="pair-card" onClick={() => checkEmotion(opt)}>
+                  {opt}
+                </button>
+              ))}
+              {/* Ensure correct answer is always present */}
+              <button className="pair-card" onClick={() => checkEmotion(currentEmotion.answer)}>{currentEmotion.answer}</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="games-page">
       <section className="development-header">
@@ -281,6 +337,12 @@ function Games() {
           <strong>Полезные пары</strong>
           <p>Связь предметов с действиями и режимными привычками.</p>
           <small>ЗПР · внимание · 6 минут</small>
+        </button>
+        <button className="exercise-card" style={{ border: '1px solid var(--accent-purple)' }} onClick={() => startCard('emotions')}>
+          <span className="exercise-icon" style={{ background: 'var(--accent-purple-bg)', color: 'var(--accent-purple)' }}>😄</span>
+          <strong>Угадай эмоцию</strong>
+          <p>Развитие эмоционального интеллекта и эмпатии у ребёнка.</p>
+          <small>РАС · психология · 4 минуты</small>
         </button>
       </div>
 

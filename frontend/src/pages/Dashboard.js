@@ -39,14 +39,16 @@ function Dashboard() {
       api.getChildren(),
       api.getMedicalRecords(),
       api.getGameProgress(),
+      api.getAiAnalysis().catch(() => null), // If AI fails, return null
     ])
-      .then(([appointments, children, medical, progress]) => {
+      .then(([appointments, children, medical, progress, ai]) => {
         if (!mounted) return;
         setSummary({
           appointments: normalizeList(appointments),
           children: normalizeList(children),
           medical: normalizeList(medical),
           progress: normalizeList(progress),
+          ai: ai,
           loading: false,
         });
       })
@@ -218,14 +220,31 @@ function Dashboard() {
         <section className="work-card">
           <div className="work-card-header">
             <div>
-              <h2>Чеклист</h2>
-              <p>Что довести до готовности</p>
+              <h2>Умный Анализ (AI)</h2>
+              <p>Оценка динамики развития</p>
             </div>
+            {summary.ai?.riskLevel === 'Low' && <span className="badge badge-success">Всё отлично</span>}
+            {summary.ai?.riskLevel === 'Medium' && <span className="badge badge-warning">Требует внимания</span>}
+            {summary.ai?.riskLevel === 'High' && <span className="badge badge-danger">Критично</span>}
           </div>
-          <div className="checklist">
-            {checklist.map((item) => (
-              <div key={item}><FiCheckCircle /> {item}</div>
-            ))}
+          <div className="checklist" style={{ fontSize: '14px', lineHeight: '1.6', padding: '10px 0' }}>
+            {summary.ai ? (
+              <>
+                <p><strong>Анализ:</strong> {summary.ai.analysis}</p>
+                {summary.ai.recommendedGames?.length > 0 && (
+                  <div style={{ marginTop: '12px' }}>
+                    <p style={{ color: 'var(--text-muted)' }}>Рекомендуемые упражнения:</p>
+                    <ul style={{ paddingLeft: '20px', marginTop: '6px' }}>
+                      {summary.ai.recommendedGames.map((game, i) => (
+                        <li key={i}>{game}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p style={{ color: 'var(--text-muted)' }}>Аналитика пока недоступна.</p>
+            )}
           </div>
         </section>
 

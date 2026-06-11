@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -9,59 +8,35 @@ import (
 	"damukids-backend/models"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GetMedicalRecords возвращает список медкарт
+// GetMedicalRecords получает записи
 func GetMedicalRecords(c *gin.Context) {
-	collection := config.GetCollection("medical_records")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	cursor, err := collection.Find(ctx, bson.M{"user_id": c.GetString("userID")})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Ошибка получения данных"})
-		return
-	}
-	defer cursor.Close(ctx)
-
+	userID := c.GetString("userID")
 	var records []models.MedicalRecord
-	if err = cursor.All(ctx, &records); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Ошибка обработки данных"})
+	if err := config.DB.Where("user_id = ?", userID).Find(&records).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Ошибка получения записей"})
 		return
 	}
-
-	// Если записей нет, возвращаем пустой массив
 	if records == nil {
 		records = []models.MedicalRecord{}
 	}
-
 	c.JSON(http.StatusOK, records)
 }
 
-// AddMedicalRecord добавляет новую запись в медкарту
+// AddMedicalRecord добавляет запись
 func AddMedicalRecord(c *gin.Context) {
 	var record models.MedicalRecord
-
 	if err := c.ShouldBindJSON(&record); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Неверный формат данных"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Неверный формат записи"})
 		return
 	}
-
-	record.ID = primitive.NewObjectID()
 	record.UserID = c.GetString("userID")
 	record.VisitDate = time.Now()
 
-	collection := config.GetCollection("medical_records")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err := collection.InsertOne(ctx, record)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Ошибка при сохранении"})
+	if err := config.DB.Create(&record).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Ошибка при создании"})
 		return
 	}
-
 	c.JSON(http.StatusCreated, record)
 }

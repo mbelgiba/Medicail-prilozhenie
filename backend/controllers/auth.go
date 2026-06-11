@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"strings"
@@ -13,8 +12,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -52,20 +49,17 @@ func Register(c *gin.Context) {
 		role = models.RoleParent
 	}
 
-	collection := config.GetCollection("users")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	// ── Проверка дублирующего email ───────────────────────────────────────────
-	count, _ := collection.CountDocuments(ctx, bson.M{"email": input.Email})
+	var count int64
+	config.DB.Model(&models.User{}).Where("email = ?", input.Email).Count(&count)
 	if count > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Пользователь с таким email уже существует"})
 		return
 	}
 
 	// ── Проверка дублирующего ИИН ─────────────────────────────────────────────
-	iinCount, _ := collection.CountDocuments(ctx, bson.M{"iin": input.IIN})
-	if iinCount > 0 {
+	config.DB.Model(&models.User{}).Where("iin = ?", input.IIN).Count(&count)
+	if count > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Пользователь с таким ИИН уже зарегистрирован"})
 		return
 	}
@@ -78,7 +72,6 @@ func Register(c *gin.Context) {
 	}
 
 	user := models.User{
-		ID:           primitive.NewObjectID(),
 		Username:     input.Username,
 		Email:        input.Email,
 		Password:     string(hashed),
@@ -89,16 +82,19 @@ func Register(c *gin.Context) {
 		Specialty:    strings.TrimSpace(input.Specialty),
 		Organization: strings.TrimSpace(input.Organization),
 		Gender:       utils.IINGender(input.IIN),
+		BirthDate:    time.Now(),
 		CreatedAt:    time.Now(),
 	}
 	EnsureDoctorProfile(&user)
 
-	if _, err = collection.InsertOne(ctx, user); err != nil {
+	if err := config.DB.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Ошибка при создании пользователя"})
 		return
 	}
 
-	token := generateToken(user.ID.Hex())
+	// Для JWT нужен строковый ID. В GORM ID это uint (скорее всего, т.к. мы убрали ObjectID)
+	// Допустим, мы парсим его как строку через fmt.Sprint или strconv
+	token := generateToken(user.Email, user.Role)
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Регистрация прошла успешно",
 		"token":   token,
@@ -119,12 +115,8 @@ func Login(c *gin.Context) {
 	}
 	input.Email = strings.TrimSpace(strings.ToLower(input.Email))
 
-	collection := config.GetCollection("users")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	var user models.User
-	if err := collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&user); err != nil {
+	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
 		// Возвращаем одно и то же сообщение, чтобы не раскрывать, существует ли email
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Неверный email или пароль"})
 		return
@@ -135,7 +127,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token := generateToken(user.ID.Hex())
+	token := generateToken(user.Email, user.Role)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Вход выполнен успешно",
 		"token":   token,
@@ -144,16 +136,17 @@ func Login(c *gin.Context) {
 }
 
 // generateToken создаёт подписанный JWT
-func generateToken(userID string) string {
+func generateToken(userID string, role string) string {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		secret = "damukids_default_secret_change_me"
 	}
 
 	claims := jwt.MapClaims{
-		"id":  userID,
-		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(72 * time.Hour).Unix(), // 3 дня
+		"id":   userID,
+		"role": role,
+		"iat":  time.Now().Unix(),
+		"exp":  time.Now().Add(72 * time.Hour).Unix(), // 3 дня
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

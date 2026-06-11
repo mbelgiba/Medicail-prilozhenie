@@ -69,7 +69,12 @@ export const api = {
   getGames: () => fetchWithAuth('/games'),
   getGameProgress: () => fetchWithAuth('/games/progress'),
   saveGameProgress: (data) => fetchWithAuth('/games/progress', { method: 'POST', body: JSON.stringify(data) }),
+  
+  // AI
+  chatAI: (message) => fetchWithAuth('/ai/chat', { method: 'POST', body: JSON.stringify({ message }) }),
 
+  // AI Analytics
+  getAiAnalysis: () => fetchWithAuth('/ai/health'),
 };
 
 export default api;

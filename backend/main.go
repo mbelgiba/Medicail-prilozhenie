@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
@@ -16,8 +15,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,6 +22,20 @@ func main() {
 	_ = godotenv.Load()
 
 	config.ConnectDB()
+
+	// Auto-migrate models
+	err := config.DB.AutoMigrate(
+		&models.User{},
+		&models.Child{},
+		&models.Appointment{},
+		&models.MedicalRecord{},
+		&models.GameProgress{},
+		&models.RewardPurchase{},
+	)
+	if err != nil {
+		log.Println("Не удалось выполнить миграцию базы данных:", err)
+	}
+
 	seedUser("test@damukids.kz", "Демо пользователь", "parent", "010101500003", "", "")
 	seedUser("doctor@damukids.kz", "Смирнов А.В.", "doctor", "010101500003", "ped-001", "Педиатр")
 	seedUser("logoped@damukids.kz", "Иванова Е.С.", "doctor", "010101500011", "speech-001", "Логопед-дефектолог")
@@ -40,8 +51,11 @@ func main() {
 	router.Use(cors.New(corsConfig))
 
 	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "DamuKids API работает с MongoDB"})
+		c.JSON(http.StatusOK, gin.H{"message": "DamuKids API работает с MySQL"})
 	})
+
+	// Serve uploaded files
+	router.Static("/uploads", "./uploads")
 
 	routes.SetupRouter(router)
 
@@ -56,12 +70,8 @@ func main() {
 }
 
 func seedUser(email, username, role, iin, doctorCode, specialty string) {
-	collection := config.GetCollection("users")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	count, err := collection.CountDocuments(ctx, bson.M{"email": email})
-	if err != nil {
+	var count int64
+	if err := config.DB.Model(&models.User{}).Where("email = ?", email).Count(&count).Error; err != nil {
 		log.Println("Не удалось проверить demo user:", err)
 		return
 	}
@@ -76,20 +86,20 @@ func seedUser(email, username, role, iin, doctorCode, specialty string) {
 	}
 
 	user := models.User{
-		ID:         primitive.NewObjectID(),
 		Username:   username,
 		Email:      strings.ToLower(email),
 		Password:   string(hashed),
 		Role:       role,
-		Status:     models.UserStatusActive,
+		Status:     "active",
 		IIN:        iin,
 		Gender:     utils.IINGender(iin),
 		DoctorCode: doctorCode,
 		Specialty:  specialty,
+		BirthDate:  time.Now(),
 		CreatedAt:  time.Now(),
 	}
 
-	if _, err := collection.InsertOne(ctx, user); err != nil {
+	if err := config.DB.Create(&user).Error; err != nil {
 		log.Println("Не удалось создать demo user:", err)
 	}
 }

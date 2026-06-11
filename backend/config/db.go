@@ -1,51 +1,27 @@
 package config
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
-	"strings"
-	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-var DB *mongo.Database
+var DB *gorm.DB
 
-// ConnectDB подключается к MongoDB и сохраняет ссылку на базу данных
 func ConnectDB() {
-	mongoURI := os.Getenv("MONGO_URI")
-	dbName := os.Getenv("DB_NAME")
-
-	if mongoURI == "" || strings.Contains(mongoURI, "<db_password>") {
-		mongoURI = "mongodb://localhost:27017"
-	}
-	if dbName == "" {
-		dbName = "damukids"
+	dsn := os.Getenv("MYSQL_DSN")
+	if dsn == "" {
+		dsn = "root:root@tcp(127.0.0.1:3306)/damukids?charset=utf8mb4&parseTime=True&loc=Local"
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	clientOptions := options.Client().ApplyURI(mongoURI)
-	client, err := mongo.Connect(ctx, clientOptions)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("❌ Ошибка при создании клиента MongoDB: ", err)
+		log.Fatal("❌ Ошибка при подключении к MySQL: ", err)
 	}
 
-	// Проверка подключения
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal("❌ Не удалось подключиться к MongoDB: ", err)
-	}
-
-	fmt.Println("✅ Успешно подключено к базе данных MongoDB!")
-	DB = client.Database(dbName)
-}
-
-// GetCollection возвращает нужную коллекцию из базы данных
-func GetCollection(collectionName string) *mongo.Collection {
-	return DB.Collection(collectionName)
+	fmt.Println("✅ Успешно подключено к базе данных MySQL!")
+	DB = db
 }

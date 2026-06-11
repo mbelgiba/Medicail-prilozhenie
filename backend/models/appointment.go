@@ -3,24 +3,25 @@ package models
 import (
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gorm.io/gorm"
 )
 
 type Appointment struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserID       string             `bson:"user_id" json:"userId"`
-	ChildID      string             `bson:"child_id,omitempty" json:"childId,omitempty"`
-	ChildName    string             `bson:"child_name,omitempty" json:"childName,omitempty"`
-	DoctorID     string             `bson:"doctor_id,omitempty" json:"doctorId,omitempty"`
-	DocName      string             `bson:"doc_name" json:"docName"`
-	Spec         string             `bson:"spec" json:"spec"`
-	Date         string             `bson:"date" json:"date"`
-	Time         string             `bson:"time" json:"time"`
-	VisitType    string             `bson:"visit_type,omitempty" json:"visitType,omitempty"`
-	LocationType string             `bson:"location_type,omitempty" json:"locationType,omitempty"`
-	Reason       string             `bson:"reason" json:"reason"`
-	Note         string             `bson:"note,omitempty" json:"note,omitempty"`
-	Status       string             `bson:"status" json:"status"`
-	CreatedAt    time.Time          `bson:"created_at" json:"createdAt"`
-	UpdatedAt    time.Time          `bson:"updated_at,omitempty" json:"updatedAt,omitempty"`
+	ID           uint `gorm:"primaryKey" json:"id"`
+	UserID       string             `gorm:"column:user_id" json:"userId"`
+	ChildID      string             `gorm:"column:child_id" json:"childId,omitempty"`
+	ChildName    string             `gorm:"column:child_name" json:"childName,omitempty"`
+	DoctorID     string             `gorm:"column:doctor_id" json:"doctorId,omitempty"`
+	DocName      string             `gorm:"column:doc_name" json:"docName"`
+	Spec         string             `gorm:"column:spec" json:"spec"`
+	Date         string             `gorm:"column:date" json:"date"`
+	Time         string             `gorm:"column:time" json:"time"`
+	VisitType    string             `gorm:"column:visit_type" json:"visitType,omitempty"`
+	LocationType string             `gorm:"column:location_type" json:"locationType,omitempty"`
+	Reason       string             `gorm:"column:reason" json:"reason"`
+	Note         string             `gorm:"column:note" json:"note,omitempty"`
+	Status       string             `gorm:"column:status" json:"status"`
+	CreatedAt    time.Time          `gorm:"column:created_at" json:"createdAt"`
+	UpdatedAt    time.Time          `gorm:"column:updated_at" json:"updatedAt,omitempty"`
+	DeletedAt    gorm.DeletedAt     `gorm:"index" json:"-"`
 }

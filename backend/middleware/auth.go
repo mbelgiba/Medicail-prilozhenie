@@ -60,8 +60,34 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		// Inject user ID into request context for downstream handlers
 		c.Set("userID", userID)
+		
+		if role, ok := claims["role"].(string); ok {
+			c.Set("userRole", role)
+		}
+
 		c.Next()
+	}
+}
+
+// RequireRole checks if the user has one of the allowed roles
+func RequireRole(allowedRoles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRole := c.GetString("userRole")
+		if userRole == "" {
+			c.JSON(http.StatusForbidden, gin.H{"message": "Недостаточно прав: роль не определена"})
+			c.Abort()
+			return
+		}
+
+		for _, role := range allowedRoles {
+			if userRole == role {
+				c.Next()
+				return
+			}
+		}
+
+		c.JSON(http.StatusForbidden, gin.H{"message": "Недостаточно прав для выполнения операции"})
+		c.Abort()
 	}
 }

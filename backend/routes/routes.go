@@ -18,6 +18,9 @@ func SetupRouter(router *gin.Engine) {
 			auth.POST("/login", controllers.Login)
 		}
 
+		// WebSockets (отдельно от AuthRequired, чтобы принимать token из URL)
+		api.GET("/ws", controllers.ServeWS)
+
 		// ── Protected routes (JWT required) ───────────────────────────────────
 		protected := api.Group("/")
 		protected.Use(middleware.AuthRequired())
@@ -27,6 +30,7 @@ func SetupRouter(router *gin.Engine) {
 			protected.GET("/notifications", controllers.GetNotifications)
 			protected.GET("/doctors", controllers.GetDoctors)
 			protected.GET("/catalog", controllers.GetCatalog)
+			protected.POST("/upload", controllers.UploadFile)
 
 			family := protected.Group("/family")
 			{
@@ -62,10 +66,15 @@ func SetupRouter(router *gin.Engine) {
 			}
 
 			doctor := protected.Group("/doctor")
+			doctor.Use(middleware.RequireRole("doctor"))
 			{
 				doctor.GET("/appointments", controllers.GetDoctorAppointments)
 			}
 
+			ai := protected.Group("/ai")
+			{
+				ai.GET("/health", controllers.AnalyzeHealth)
+			}
 		}
 	}
 }

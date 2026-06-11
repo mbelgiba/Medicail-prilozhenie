@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -10,24 +9,13 @@ import (
 	"damukids-backend/utils"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetChildren(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	cursor, err := config.GetCollection("children").Find(ctx, bson.M{"parent_id": c.GetString("userID")})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось получить детей"})
-		return
-	}
-	defer cursor.Close(ctx)
-
-	children := []models.Child{}
-	if err := cursor.All(ctx, &children); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось обработать детей"})
+	userID := c.GetString("userID")
+	var children []models.Child
+	if err := config.DB.Where("parent_id = ?", userID).Find(&children).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось получить список детей"})
 		return
 	}
 	c.JSON(http.StatusOK, children)
@@ -43,7 +31,7 @@ func AddChild(c *gin.Context) {
 		Notes             string `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Заполните ФИО, ИИН и дату рождения"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Неверный формат данных"})
 		return
 	}
 	if err := utils.ValidateIIN(input.IIN); err != nil {
@@ -52,18 +40,18 @@ func AddChild(c *gin.Context) {
 	}
 
 	parentID := c.GetString("userID")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
-	duplicate, _ := config.GetCollection("children").CountDocuments(ctx, bson.M{"parent_id": parentID, "iin": input.IIN})
+	var duplicate int64
+	config.DB.Model(&models.Child{}).Where("parent_id = ? AND iin = ?", parentID, input.IIN).Count(&duplicate)
 	if duplicate > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Этот ребёнок уже прикреплён к вашему профилю"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Ребенок с таким ИИН уже добавлен"})
 		return
 	}
 
-	count, _ := config.GetCollection("children").CountDocuments(ctx, bson.M{"parent_id": parentID})
+	var count int64
+	config.DB.Model(&models.Child{}).Where("parent_id = ?", parentID).Count(&count)
+
 	child := models.Child{
-		ID:                primitive.NewObjectID(),
 		ParentID:          parentID,
 		Name:              input.Name,
 		IIN:               input.IIN,
@@ -76,8 +64,8 @@ func AddChild(c *gin.Context) {
 		CreatedAt:         time.Now(),
 	}
 
-	if _, err := config.GetCollection("children").InsertOne(ctx, child); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось прикрепить ребёнка"})
+	if err := config.DB.Create(&child).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось добавить ребенка"})
 		return
 	}
 	c.JSON(http.StatusCreated, child)

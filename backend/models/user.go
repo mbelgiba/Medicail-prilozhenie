@@ -3,33 +3,34 @@ package models
 import (
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Username string             `bson:"username" json:"username"`
-	Email    string             `bson:"email,omitempty" json:"email,omitempty"`
-	Password string             `bson:"password" json:"-"`
+	ID       uint `gorm:"primaryKey" json:"id"`
+	Username string             `gorm:"column:username" json:"username"`
+	Email    string             `gorm:"column:email;type:varchar(255);uniqueIndex" json:"email,omitempty"`
+	Password string             `gorm:"column:password" json:"-"`
 
-	Role   string `bson:"role" json:"role"`
-	Status string `bson:"status" json:"status"`
-	Phone  string `bson:"phone,omitempty" json:"phone,omitempty"`
+	Role   string `gorm:"column:role" json:"role"`
+	Status string `gorm:"column:status" json:"status"`
+	Phone  string `gorm:"column:phone" json:"phone,omitempty"`
 
-	DoctorCode   string `bson:"doctor_code,omitempty" json:"doctorCode,omitempty"`
-	Specialty    string `bson:"specialty,omitempty" json:"specialty,omitempty"`
-	Organization string `bson:"organization,omitempty" json:"organization,omitempty"`
-	Cabinet      string `bson:"cabinet,omitempty" json:"cabinet,omitempty"`
-	LicenseNo    string `bson:"license_no,omitempty" json:"licenseNo,omitempty"`
+	DoctorCode   string `gorm:"column:doctor_code" json:"doctorCode,omitempty"`
+	Specialty    string `gorm:"column:specialty" json:"specialty,omitempty"`
+	Organization string `gorm:"column:organization" json:"organization,omitempty"`
+	Cabinet      string `gorm:"column:cabinet" json:"cabinet,omitempty"`
+	LicenseNo    string `gorm:"column:license_no" json:"licenseNo,omitempty"`
 
-	IIN string `bson:"iin" json:"iin"`
+	IIN string `gorm:"column:iin;type:varchar(20);index" json:"iin"`
 
-	ParentID primitive.ObjectID `bson:"parent_id,omitempty" json:"parentId,omitempty"`
-	Children []User             `bson:"-" json:"children,omitempty"`
+	ParentID uint `gorm:"column:parent_id" json:"parentId,omitempty"`
+	Children []User             `gorm:"-" json:"children,omitempty"`
 
-	BirthDate time.Time `bson:"birth_date,omitempty" json:"birthDate,omitempty"`
-	Gender    string    `bson:"gender,omitempty" json:"gender,omitempty"`
+	BirthDate time.Time `gorm:"column:birth_date" json:"birthDate,omitempty"`
+	Gender    string    `gorm:"column:gender" json:"gender,omitempty"`
 
-	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
-	UpdatedAt time.Time `bson:"updated_at,omitempty" json:"updatedAt,omitempty"`
+	CreatedAt time.Time `gorm:"column:created_at" json:"createdAt"`
+	UpdatedAt time.Time      `gorm:"column:updated_at" json:"updatedAt,omitempty"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }

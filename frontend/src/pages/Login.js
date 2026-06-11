@@ -169,7 +169,7 @@ function Login() {
 
       {/* ── Right: Form Panel ── */}
       <div className="login-right">
-        <div className="login-form-box">
+        <div className="login-form-box glass-panel" style={{ padding: '40px', background: 'var(--bg-card)' }}>
           <div className="login-form-header">
             <h2>{tab === 'login' ? 'Вход в аккаунт' : 'Регистрация'}</h2>
             <p>{tab === 'login' ? 'Введите ваши данные для входа' : 'Создайте аккаунт — это займёт минуту'}</p>

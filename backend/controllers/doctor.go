@@ -1,40 +1,25 @@
 package controllers
 
 import (
-	"context"
 	"net/http"
 	"strings"
-	"time"
+	"fmt"
 
 	"damukids-backend/config"
 	"damukids-backend/models"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetDoctors(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	cursor, err := config.GetCollection("users").Find(ctx, bson.M{
-		"role":   models.RoleDoctor,
-		"status": bson.M{"$ne": models.UserStatusBlocked},
-	})
-	if err != nil {
+	var users []models.User
+	if err := config.DB.Where("role = ? AND status != ?", models.RoleDoctor, models.UserStatusBlocked).Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось получить список врачей"})
 		return
 	}
-	defer cursor.Close(ctx)
 
-	doctors := []gin.H{}
-	for cursor.Next(ctx) {
-		var user models.User
-		if err := cursor.Decode(&user); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось обработать список врачей"})
-			return
-		}
+	var doctors []gin.H
+	for _, user := range users {
 		doctors = append(doctors, gin.H{
 			"id":           user.DoctorCode,
 			"name":         user.Username,
@@ -59,19 +44,9 @@ func GetDoctorAppointments(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	cursor, err := config.GetCollection("appointments").Find(ctx, bson.M{"doctor_id": user.DoctorCode})
-	if err != nil {
+	var appointments []models.Appointment
+	if err := config.DB.Where("doctor_id = ?", user.DoctorCode).Find(&appointments).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось получить записи врача"})
-		return
-	}
-	defer cursor.Close(ctx)
-
-	appointments := []models.Appointment{}
-	if err := cursor.All(ctx, &appointments); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось обработать записи врача"})
 		return
 	}
 
@@ -83,7 +58,7 @@ func EnsureDoctorProfile(user *models.User) {
 		return
 	}
 	if strings.TrimSpace(user.DoctorCode) == "" {
-		user.DoctorCode = user.ID.Hex()
+		user.DoctorCode = fmt.Sprint(user.ID) // Wait, we use fmt.Sprint because ID might be empty here. In GORM, ID is auto-increment.
 	}
 	if strings.TrimSpace(user.Specialty) == "" {
 		user.Specialty = "Специалист"
@@ -91,17 +66,13 @@ func EnsureDoctorProfile(user *models.User) {
 }
 
 func currentUser(c *gin.Context) (models.User, bool) {
-	userID := c.GetString("userID")
-	objectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
+	userID := c.GetString("userID") // this is email based on my updated auth
+	if userID == "" {
 		return models.User{}, false
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	var user models.User
-	if err := config.GetCollection("users").FindOne(ctx, bson.M{"_id": objectID}).Decode(&user); err != nil {
+	if err := config.DB.Where("email = ?", userID).First(&user).Error; err != nil {
 		return models.User{}, false
 	}
 	return user, true

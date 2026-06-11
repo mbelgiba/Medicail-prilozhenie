@@ -17,7 +17,7 @@ function formatDisplayDate(date) {
 
 function Appointments() {
   const [selectedDoc, setSelectedDoc] = useState(null);
-  const [selectedChildId, setSelectedChildId] = useState('');
+  const [selectedChildId, setSelectedChildId] = useState('self');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [reason, setReason] = useState(REASONS[0]);
@@ -52,7 +52,7 @@ function Appointments() {
       .then((data) => {
         const items = Array.isArray(data) ? data : [];
         setChildren(items);
-        if (items.length > 0) setSelectedChildId(items.find((item) => item.active)?.id || items[0].id);
+        if (items.length > 0 && !selectedChildId) setSelectedChildId('self');
       })
       .catch((error) => setErrorMsg(error.message || 'Не удалось загрузить детей'));
     api.getDoctors()
@@ -79,8 +79,8 @@ function Appointments() {
     }
 
     const newAppt = {
-      childId: selectedChildId,
-      doctorId: selectedDoc.id,
+      childId: String(selectedChildId),
+      doctorId: String(selectedDoc.id),
       date: selectedDate,
       time: selectedSlot,
       visitType,
@@ -130,21 +130,18 @@ function Appointments() {
         {/* ── Left column: Booking Form ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          <SectionCard title="1. Выберите ребёнка">
-            {children.length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Сначала добавьте ребёнка в профиле.</p>
-            ) : (
-              <div className="form-group" style={{ maxWidth: '420px' }}>
-                <label>Ребёнок</label>
-                <select className="form-input" value={selectedChildId} onChange={(e) => setSelectedChildId(e.target.value)}>
-                  {children.map((child) => (
-                    <option key={child.id} value={child.id}>
-                      {child.name}{child.developmentStatus ? ` · ${child.developmentStatus}` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+          <SectionCard title="1. Выберите пациента">
+            <div className="form-group" style={{ maxWidth: '420px' }}>
+              <label>Пациент</label>
+              <select className="form-input" value={selectedChildId} onChange={(e) => setSelectedChildId(e.target.value)}>
+                <option value="self">Я (Записать себя)</option>
+                {children.map((child) => (
+                  <option key={child.id} value={child.id}>
+                    Ребёнок: {child.name}{child.developmentStatus ? ` · ${child.developmentStatus}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
           </SectionCard>
 
           <SectionCard title="2. Выберите специалиста">

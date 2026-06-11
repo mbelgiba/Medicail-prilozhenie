@@ -1,0 +1,47 @@
+services:
+  # 1. Frontend (Static Site)
+  - type: web
+    name: damukids-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: damukids-api
+          envVarKey: RENDER_EXTERNAL_URL
+
+  # 2. Backend API (Go)
+  - type: web
+    name: damukids-api
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: MYSQL_DSN
+        value: "damukids:strongpassword@tcp(damukids-mysql:3306)/damukids?charset=utf8mb4&parseTime=True&loc=Local"
+      - key: JWT_SECRET
+        value: "super_secret_jwt_key_for_production"
+      - key: GIN_MODE
+        value: "release"
+
+  # 3. Database (MySQL via Private Service)
+  # NOTE: Render requires a paid plan to attach a disk to a private service.
+  - type: pserv
+    name: damukids-mysql
+    env: docker
+    repo: https://github.com/mysql/mysql-docker.git # Or use a custom Dockerfile if needed
+    dockerfilePath: ./backend/Dockerfile.mysql # We will create this
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 1
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        value: "rootpassword"
+      - key: MYSQL_DATABASE
+        value: "damukids"
+      - key: MYSQL_USER
+        value: "damukids"
+      - key: MYSQL_PASSWORD
+        value: "strongpassword"

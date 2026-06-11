@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -10,26 +10,19 @@ import (
 	"damukids-backend/models"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetAppointments(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	var appointments []models.Appointment
+	
+	// Теперь id (userID) может храниться как строка (Email) из токена, так как мы изменили генерацию токена.
+	userID := c.GetString("userID")
 
-	cursor, err := config.GetCollection("appointments").Find(ctx, bson.M{"user_id": c.GetString("userID")})
-	if err != nil {
+	if err := config.DB.Where("user_id = ?", userID).Find(&appointments).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось получить записи"})
 		return
 	}
-	defer cursor.Close(ctx)
-
-	appointments := []models.Appointment{}
-	if err := cursor.All(ctx, &appointments); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось обработать записи"})
-		return
-	}
+	
 	c.JSON(http.StatusOK, appointments)
 }
 
@@ -45,28 +38,15 @@ func GetAppointmentAvailability(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	cursor, err := config.GetCollection("appointments").Find(ctx, bson.M{
-		"doctor_id": doctorID,
-		"date":      date,
-		"status":    "planned",
-	})
-	if err != nil {
+	var appointments []models.Appointment
+	if err := config.DB.Where("doctor_id = ? AND date = ? AND status = ?", doctorID, date, "planned").Find(&appointments).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось получить доступность"})
 		return
 	}
-	defer cursor.Close(ctx)
 
-	occupied := []string{}
-	for cursor.Next(ctx) {
-		var appointment models.Appointment
-		if err := cursor.Decode(&appointment); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось обработать доступность"})
-			return
-		}
-		occupied = append(occupied, appointment.Time)
+	var occupied []string
+	for _, appt := range appointments {
+		occupied = append(occupied, appt.Time)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"doctorId": doctorID, "date": date, "occupiedSlots": occupied})
@@ -98,7 +78,6 @@ func AddAppointment(c *gin.Context) {
 	}
 
 	parentID := c.GetString("userID")
-	appointment.ID = primitive.NewObjectID()
 	appointment.UserID = parentID
 	appointment.Status = "planned"
 	appointment.CreatedAt = time.Now()
@@ -112,63 +91,59 @@ func AddAppointment(c *gin.Context) {
 		appointment.LocationType = "Очно"
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	var child models.Child
-	childObjectID, err := primitive.ObjectIDFromHex(appointment.ChildID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Некорректный ID ребёнка"})
-		return
-	}
-	if err := config.GetCollection("children").FindOne(ctx, bson.M{"_id": childObjectID, "parent_id": parentID}).Decode(&child); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Ребёнок не найден в вашем профиле"})
-		return
+	var childName string
+	
+	if appointment.ChildID == "self" {
+		childName = "Взрослый (Родитель)"
+	} else {
+		if err := config.DB.Where("id = ? AND parent_id = ?", appointment.ChildID, parentID).First(&child).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Ребёнок не найден в вашем профиле"})
+			return
+		}
+		childName = child.Name
 	}
 
 	var doctor models.User
-	if err := config.GetCollection("users").FindOne(ctx, bson.M{
-		"role":        models.RoleDoctor,
-		"doctor_code": appointment.DoctorID,
-		"status":      bson.M{"$ne": models.UserStatusBlocked},
-	}).Decode(&doctor); err != nil {
+	if err := config.DB.Where("role = ? AND doctor_code = ? AND status != ?", models.RoleDoctor, appointment.DoctorID, models.UserStatusBlocked).First(&doctor).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Специалист не найден или недоступен"})
 		return
 	}
 
-	slotTaken, _ := config.GetCollection("appointments").CountDocuments(ctx, bson.M{
-		"doctor_id": appointment.DoctorID,
-		"date":      appointment.Date,
-		"time":      appointment.Time,
-		"status":    "planned",
-	})
+	var slotTaken int64
+	config.DB.Model(&models.Appointment{}).Where("doctor_id = ? AND date = ? AND time = ? AND status = ?", appointment.DoctorID, appointment.Date, appointment.Time, "planned").Count(&slotTaken)
 	if slotTaken > 0 {
 		c.JSON(http.StatusConflict, gin.H{"message": "Это время уже занято у выбранного специалиста"})
 		return
 	}
 
-	appointment.ChildName = child.Name
+	appointment.ChildName = childName
 	appointment.DocName = doctor.Username
 	appointment.Spec = doctor.Specialty
 
-	if _, err := config.GetCollection("appointments").InsertOne(ctx, appointment); err != nil {
+	if err := config.DB.Create(&appointment).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Не удалось создать запись"})
 		return
 	}
+
+	// Отправляем уведомление
+	SendNotification(appointment.UserID, gin.H{
+		"type":    "NEW_APPOINTMENT",
+		"message": fmt.Sprintf("Вы успешно записались к %s на %s %s", appointment.Spec, appointment.Date, appointment.Time),
+	})
+
 	c.JSON(http.StatusCreated, appointment)
 }
 
 func CancelAppointment(c *gin.Context) {
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
-	if err != nil {
+	id := c.Param("id")
+	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Некорректный ID записи"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	result, err := config.GetCollection("appointments").DeleteOne(ctx, bson.M{"_id": id, "user_id": c.GetString("userID")})
-	if err != nil || result.DeletedCount == 0 {
+	result := config.DB.Where("id = ? AND user_id = ?", id, c.GetString("userID")).Delete(&models.Appointment{})
+	if result.Error != nil || result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Запись не найдена"})
 		return
 	}

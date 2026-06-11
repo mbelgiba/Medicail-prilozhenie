@@ -6,6 +6,8 @@ import './Profile.css';
 
 const FALLBACK_DEVELOPMENT_STATUSES = ['ЗРР', 'ЗПР', 'РАС', 'СДВГ', 'Норма развития', 'Наблюдение'];
 
+import { useNavigate } from 'react-router-dom';
+
 function validateIIN(iin) {
   if (!/^\d{12}$/.test(iin)) return { valid: false, msg: 'ИИН должен содержать 12 цифр' };
   const cg = parseInt(iin[6], 10);
@@ -27,7 +29,8 @@ function validateIIN(iin) {
 }
 
 function Profile() {
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, toggleChildMode } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -186,15 +189,31 @@ function Profile() {
             const check = validateIIN(child.iin || '');
             return (
               <article className="child-profile-card" key={child.id}>
-                <div className="child-profile-icon"><FiUser /></div>
-                <div>
-                  <h3>{child.name}</h3>
-                  <p>{child.birthDate || 'Дата рождения не указана'}</p>
-                  {child.developmentStatus && <span className="child-badge">{child.developmentStatus}</span>}
-                  {child.primaryNeed && <p>{child.primaryNeed}</p>}
-                  <small className={check.valid ? 'valid' : 'invalid'}>
-                    <FiCheckCircle /> {check.valid ? 'ИИН подтверждён' : 'Проверьте ИИН'}
-                  </small>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <div className="child-profile-icon"><FiUser /></div>
+                    <div>
+                      <h3>{child.name}</h3>
+                      <p>{child.birthDate || 'Дата рождения не указана'}</p>
+                      {child.developmentStatus && <span className="child-badge">{child.developmentStatus}</span>}
+                      {child.primaryNeed && <p>{child.primaryNeed}</p>}
+                      <small className={check.valid ? 'valid' : 'invalid'}>
+                        <FiCheckCircle /> {check.valid ? 'ИИН подтверждён' : 'Проверьте ИИН'}
+                      </small>
+                    </div>
+                  </div>
+                  <button 
+                    className="btn-primary pulse-btn" 
+                    style={{ fontSize: '13px', padding: '10px 16px', background: 'var(--gradient-purple)', boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)', border: 'none', borderRadius: 'var(--radius)' }}
+                    onClick={() => {
+                      if (window.confirm(`Перейти в детский профиль (${child.name})? Другие вкладки будут скрыты.`)) {
+                        toggleChildMode(true);
+                        navigate('/games');
+                      }
+                    }}
+                  >
+                    🎮 Войти как ребёнок
+                  </button>
                 </div>
               </article>
             );
